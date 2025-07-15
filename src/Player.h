@@ -2,8 +2,8 @@
 #include <cmath>
 
 struct Player {
-    double posX = 22.0;
-    double posY = 12.0;
+    double posX = 9.0;
+    double posY = 10.0;
 
     double dirX = -1.0;
     double dirY = 0.0;

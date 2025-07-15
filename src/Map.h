@@ -7,6 +7,7 @@ public:
     int getWidth() const;
     int getHeight() const;
     bool isWall(int x, int y) const;
+    int getWallType(int x, int y) const;
 
 private:
     static constexpr int width = 24;

@@ -1,6 +1,7 @@
 #include "Game.h"
 #include <iostream>
 #include <memory>
+#include <SDL_image.h>
 
 Game::Game() {
     init();
@@ -16,7 +17,7 @@ void Game::init() {
         std::exit(EXIT_FAILURE);
     }
 
-    window = SDL_CreateWindow("Wolfenstein style engine", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
+    window = SDL_CreateWindow("Wolfenstein3D style engine", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
         SCREEN_WIDTH, SCREEN_HEIGHT, SDL_WINDOW_SHOWN);
 
     if (!window) {
@@ -35,6 +36,18 @@ void Game::init() {
     raycaster->setMap(map);
     raycaster->setPlayer(player);
 
+    if (!IMG_Init(IMG_INIT_PNG)) {
+        std::cerr << "Failed to initialize SDL_image! SDL Error: " << IMG_GetError() << std::endl;
+        std::exit(EXIT_FAILURE);
+    }
+
+    if (!textureManager.loadTextures()) {
+        std::cerr << "Text Manager loading textures failure! SDL Error: " << std::endl;
+        std::exit(EXIT_FAILURE);
+    }
+
+    raycaster->setTextureManager(textureManager);
+
     running = true;
 }
 
@@ -52,14 +65,14 @@ void Game::handleEvents() {
         if (event.type == SDL_KEYDOWN && event.key.keysym.sym == SDLK_ESCAPE) running = false;
     }
 
-    const Uint8* keyStates = SDL_GetKeyboardState(NULL);
+    const Uint8* keyStates = SDL_GetKeyboardState(nullptr);
 
-    double moveStep = player.moveSpeed;
-    double rotationStep = player.rotationSpeed;
+    const double moveStep = player.moveSpeed;
+    const double rotationStep = player.rotationSpeed;
 
     if (keyStates[SDL_SCANCODE_W]) {
-        double nextX = player.posX + player.dirX * moveStep;
-        double nextY = player.posY + player.dirY * moveStep;
+        const double nextX = player.posX + player.dirX * moveStep;
+        const double nextY = player.posY + player.dirY * moveStep;
         if (!map.isWall(static_cast<int>(nextX), static_cast<int>(player.posY))) {
             player.posX = nextX;
         }
@@ -68,8 +81,8 @@ void Game::handleEvents() {
         }
     }
     if (keyStates[SDL_SCANCODE_S]) {
-        double nextX = player.posX - player.dirX * moveStep;
-        double nextY = player.posY - player.dirY * moveStep;
+        const double nextX = player.posX - player.dirX * moveStep;
+        const double nextY = player.posY - player.dirY * moveStep;
         if (!map.isWall(static_cast<int>(nextX), static_cast<int>(player.posY))) {
             player.posX = nextX;
         }
@@ -78,28 +91,28 @@ void Game::handleEvents() {
         }
     }
     if (keyStates[SDL_SCANCODE_A]) {
-        double oldDirX = player.dirX;
+        const double oldDirX = player.dirX;
         player.dirX = player.dirX * std::cos(rotationStep) - player.dirY * std::sin(rotationStep);
         player.dirY = oldDirX * std::sin(rotationStep) + player.dirY * std::cos(rotationStep);
 
-        double oldPlaneX = player.planeX;
+        const double oldPlaneX = player.planeX;
         player.planeX = player.planeX * std::cos(rotationStep) - player.planeY * std::sin(rotationStep);
         player.planeY = oldPlaneX * std::sin(rotationStep) + player.planeY * std::cos(rotationStep);
     }
     if (keyStates[SDL_SCANCODE_D]) {
-        double oldDirX = player.dirX;
+        const double oldDirX = player.dirX;
         player.dirX = player.dirX * std::cos(-rotationStep) - player.dirY * std::sin(-rotationStep);
         player.dirY = oldDirX * std::sin(-rotationStep) + player.dirY * std::cos(-rotationStep);
 
-        double oldPlaneX = player.planeX;
+        const double oldPlaneX = player.planeX;
         player.planeX = player.planeX * std::cos(-rotationStep) - player.planeY * std::sin(-rotationStep);
         player.planeY = oldPlaneX * std::sin(-rotationStep) + player.planeY * std::cos(-rotationStep);
     }
     if (keyStates[SDL_SCANCODE_E]) {
-        double strafeX = player.dirY;
-        double strafeY = -player.dirX;
-        double nextX = player.posX + strafeX * moveStep;
-        double nextY = player.posY + strafeY * moveStep;
+        const double strafeX = player.dirY;
+        const double strafeY = -player.dirX;
+        const double nextX = player.posX + strafeX * moveStep;
+        const double nextY = player.posY + strafeY * moveStep;
         if (!map.isWall(static_cast<int>(nextX), static_cast<int>(player.posY))) {
             player.posX = nextX;
         }
@@ -108,10 +121,10 @@ void Game::handleEvents() {
         }
     }
     if (keyStates[SDL_SCANCODE_Q]) {
-        double strafeX = -player.dirY;
-        double strafeY = player.dirX;
-        double nextX = player.posX + strafeX * moveStep;
-        double nextY = player.posY + strafeY * moveStep;
+        const double strafeX = -player.dirY;
+        const double strafeY = player.dirX;
+        const double nextX = player.posX + strafeX * moveStep;
+        const double nextY = player.posY + strafeY * moveStep;
         if (!map.isWall(static_cast<int>(nextX), static_cast<int>(player.posY))) {
             player.posX = nextX;
         }
@@ -120,11 +133,9 @@ void Game::handleEvents() {
         }
     }
     raycaster->setPlayer(player);
-
 }
 
 void Game::render() {
-    renderer->clear(0xFF000000);
     raycaster->renderFrame();
     renderer->present();
 }

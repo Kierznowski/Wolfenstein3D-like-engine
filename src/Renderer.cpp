@@ -18,10 +18,6 @@ Renderer::~Renderer() {
     }
 }
 
-void Renderer::clear(uint32_t color) {
-    std::fill(framebuffer.begin(), framebuffer.end(), color);
-}
-
 void Renderer::putPixel(int x, int y, uint32_t color) {
     if (x >= 0 && x < width && y >= 0 && y < height) {
         framebuffer[y * width + x] = color;

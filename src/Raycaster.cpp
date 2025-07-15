@@ -1,13 +1,16 @@
 #include "Raycaster.h"
 
 #include <cmath>
-#include <algorithm> // std::min, std::max
 
 constexpr uint32_t FLOOR_COLOR = 0xFF444444;
 constexpr uint32_t CEILING_COLOR = 0xFF8888FF;
 
 Raycaster::Raycaster(Renderer &renderer, int screenWidth, int screenHeight)
     : renderer(&renderer), screenWidth(screenWidth), screenHeight(screenHeight) {
+}
+
+void Raycaster::setTextureManager(TextureManager& textureManager) {
+    this->textureManager = &textureManager;
 }
 
 void Raycaster::setMap(const Map& map) {
@@ -77,7 +80,8 @@ void Raycaster::castRayColumn(int x) {
 
     // DDA - Digital Differential Analyzer
     bool hit = false;
-    int side = 0; // 0 - x side, 1 - y side
+    int side{0}; // 0 - x side, 1 - y side
+    int wall_type{0};
 
     while (!hit) {
         if (sideDistX < sideDistY) {
@@ -92,6 +96,7 @@ void Raycaster::castRayColumn(int x) {
 
         if (map.isWall(mapX, mapY)) {
             hit = true;
+            wall_type = map.getWallType(mapX, mapY);
         }
     }
 
@@ -108,9 +113,39 @@ void Raycaster::castRayColumn(int x) {
     int drawEnd = lineHeight / 2 + screenHeight / 2;
     if (drawEnd >= screenHeight) drawEnd = screenHeight - 1;
 
-    uint32_t color = (side == 1) ? 0xFF888888 : 0xFFFFFFFF;
+    const auto& texture = textureManager->getTexture(wall_type);
+    int textureWidth = textureManager->getTextureWidth();
+    int textureHeight = textureManager->getTextureHeight();
+
+    double wallX;
+    if (side == 0) {
+        wallX = player.posY + perpWallDist * rayDirY;
+    } else {
+        wallX = player.posX + perpWallDist * rayDirX;
+    }
+    wallX -= std::floor(wallX);
+
+    int texX = static_cast<int>(wallX * textureWidth);
+    if ((side == 0 && rayDirX > 0) || (side == 1 && rayDirY < 0)) {
+        texX = textureWidth - texX - 1;
+    }
+
+    double step = 1.0 * textureHeight / lineHeight;
+    double texPos = (drawStart - screenHeight / 2.0 + lineHeight / 2.0) * step;
 
     for (int y = drawStart; y < drawEnd; y++) {
+        int texY = static_cast<int>(texPos) & (textureHeight - 1);
+        texPos += step;
+
+        uint32_t color = texture[texY * textureWidth + texX];
+
+        if (side == 1) {
+            uint8_t r = (color >> 16) & 0xFF;
+            uint8_t g = (color >> 8) & 0xFF;
+            uint8_t b = (color >> 0) & 0xFF;
+            r /= 2; g /= 2; b /= 2;
+            color = (0xFF << 24) | (r << 16) | (g << 8) | b;
+        }
         renderer->putPixel(x, y, color);
     }
 }

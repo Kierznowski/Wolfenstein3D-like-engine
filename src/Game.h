@@ -5,6 +5,7 @@
 #include "Map.h"
 #include "Player.h"
 #include "Raycaster.h"
+#include "TextureManager.h"
 
 class Game {
 public:
@@ -19,7 +20,7 @@ private:
     void cleanup();
 
     static constexpr int SCREEN_WIDTH = 800;
-    static constexpr int SCREEN_HEIGHT = 600;
+    static constexpr int SCREEN_HEIGHT = 640;
 
     SDL_Window *window = nullptr;
     SDL_Renderer *sdlRenderer = nullptr;
@@ -29,6 +30,7 @@ private:
 
     Map map;
     Player player;
+    TextureManager textureManager;
 
     bool running = false;
 };
