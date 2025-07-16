@@ -31,8 +31,11 @@ void Game::init() {
         std::exit(EXIT_FAILURE);
     }
 
+
     renderer = std::make_unique<Renderer>(sdlRenderer, SCREEN_WIDTH, SCREEN_HEIGHT);
     raycaster = std::make_unique<Raycaster>(*renderer, SCREEN_WIDTH, SCREEN_HEIGHT);
+
+    map.loadMap("./../assets/maps/sample_map.txt");
     raycaster->setMap(map);
     raycaster->setPlayer(player);
 

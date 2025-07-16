@@ -5,10 +5,10 @@
 #include <iostream>
 
 bool TextureManager::loadTextures() {
-    if (!this->loadFromFile("./../assets/wall_brick.png", 0)) {
+    if (!this->loadFromFile("./../assets/textures/wall_brick.png", 0)) {
         return false;
     }
-    if (!this->loadFromFile("./../assets/wall_stones.png", 1)) {
+    if (!this->loadFromFile("./../assets/textures/wall_stones.png", 1)) {
         return false;
     }
     return true;
