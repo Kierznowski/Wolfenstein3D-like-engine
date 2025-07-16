@@ -8,7 +8,6 @@ public:
     Renderer(SDL_Renderer *sdlRenderer, int width, int height);
     ~Renderer();
 
-    void clear(uint32_t color = 0xFF000000);
     void putPixel(int x, int y, uint32_t color);
     void present();
 private:
