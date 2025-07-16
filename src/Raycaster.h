@@ -23,4 +23,5 @@ private:
     Map map;
 
     void castRayColumn(int x);
+    void castRayRow(int y);
 };

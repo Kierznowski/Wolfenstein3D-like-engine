@@ -2,9 +2,6 @@
 
 #include <cmath>
 
-constexpr uint32_t FLOOR_COLOR = 0xFF444444;
-constexpr uint32_t CEILING_COLOR = 0xFF8888FF;
-
 Raycaster::Raycaster(Renderer &renderer, int screenWidth, int screenHeight)
     : renderer(&renderer), screenWidth(screenWidth), screenHeight(screenHeight) {
 }
@@ -22,16 +19,8 @@ void Raycaster::setPlayer(const Player& player) {
 }
 
 void Raycaster::renderFrame() {
-    for (int y = 0; y < screenHeight / 2; y++) {
-        for (int x = 0; x < screenWidth; x++) {
-            renderer->putPixel(x, y, CEILING_COLOR);
-        }
-    }
-
     for (int y = screenHeight / 2; y < screenHeight; y++) {
-        for (int x = 0; x < screenWidth; x++) {
-            renderer->putPixel(x, y, FLOOR_COLOR);
-        }
+        castRayRow(y);
     }
 
     for (int x = 0; x < screenWidth; x++) {
@@ -114,8 +103,8 @@ void Raycaster::castRayColumn(int x) {
     if (drawEnd >= screenHeight) drawEnd = screenHeight - 1;
 
     const auto& texture = textureManager->getTexture(wall_type);
-    int textureWidth = textureManager->getTextureWidth();
-    int textureHeight = textureManager->getTextureHeight();
+    const int textureWidth = textureManager->getTextureWidth();
+    const int textureHeight = textureManager->getTextureHeight();
 
     double wallX;
     if (side == 0) {
@@ -130,11 +119,11 @@ void Raycaster::castRayColumn(int x) {
         texX = textureWidth - texX - 1;
     }
 
-    double step = 1.0 * textureHeight / lineHeight;
+    const double step = 1.0 * textureHeight / lineHeight;
     double texPos = (drawStart - screenHeight / 2.0 + lineHeight / 2.0) * step;
 
     for (int y = drawStart; y < drawEnd; y++) {
-        int texY = static_cast<int>(texPos) & (textureHeight - 1);
+        const int texY = static_cast<int>(texPos) & (textureHeight - 1);
         texPos += step;
 
         uint32_t color = texture[texY * textureWidth + texX];
@@ -147,5 +136,52 @@ void Raycaster::castRayColumn(int x) {
             color = (0xFF << 24) | (r << 16) | (g << 8) | b;
         }
         renderer->putPixel(x, y, color);
+    }
+}
+
+void Raycaster::castRayRow(int y) {
+    const std::vector<uint32_t> floorTexture = textureManager->getTexture(3);
+    const std::vector<uint32_t> ceilingTexture = textureManager->getTexture(4);
+
+    const int textureWidth = textureManager->getTextureWidth();
+    const int textureHeight = textureManager->getTextureHeight();
+
+    // ray direction for the leftmost ray (x = 0) and the rightmost ray (x = width).
+    // We need to add or subtract plane vector from player direction vector.
+    const double rayDirX0 = player.dirX - player.planeX;
+    const double rayDirY0 = player.dirY - player.planeY;
+    const double rayDirX1 = player.dirX + player.planeX;
+    const double rayDirY1 = player.dirY + player.planeY;
+
+    // distance of the row from the middle of the screen
+    const int p = y - screenHeight / 2;
+    const double posZ = 0.5 * screenHeight;
+    // distance from the camera plane to the row. For row near the middle -> infinity. For bottom row -> 1;
+    const double rowDistance = posZ / p;
+
+    const double floorStepX = rowDistance * (rayDirX1 - rayDirX0) / screenWidth;
+    const double floorStepY = rowDistance * (rayDirY1 - rayDirY0) / screenWidth;
+
+    // coordinates of the leftmost column
+    double floorX = player.posX + rowDistance * rayDirX0;
+    double floorY = player.posY + rowDistance * rayDirY0;
+
+    for (int x = 0; x < screenWidth; x++) {
+        // map tile coordinates
+        const int cellX = static_cast<int>(floorX);
+        const int cellY = static_cast<int>(floorY);
+
+        // texture coordinates
+        const int texX = static_cast<int>(textureWidth * (floorX - cellX)) & (textureWidth - 1);
+        const int texY = static_cast<int>(textureHeight * (floorY - cellY)) & (textureHeight - 1);
+
+        uint32_t floorColor = floorTexture[textureWidth * texY + texX];
+        uint32_t ceilingColor = ceilingTexture[textureWidth * texY + texX + 1];
+
+        renderer->putPixel(x, y, floorColor);
+        renderer->putPixel(x, screenHeight - y - 1, ceilingColor);
+
+        floorX += floorStepX;
+        floorY += floorStepY;
     }
 }

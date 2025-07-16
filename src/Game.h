@@ -21,6 +21,9 @@ private:
 
     static constexpr int SCREEN_WIDTH = 800;
     static constexpr int SCREEN_HEIGHT = 640;
+    Uint32 time = 0;
+    Uint32 lastTime = 0;
+    float fps = 0.0f;
 
     SDL_Window *window = nullptr;
     SDL_Renderer *sdlRenderer = nullptr;
