@@ -18,9 +18,15 @@ private:
     TextureManager *textureManager;
     int screenWidth;
     int screenHeight;
+    int textureWidth;
+    int textureHeight;
 
     Player player;
     Map map;
+    std::vector<uint32_t> floorTextureCache;
+    std::vector<uint32_t> ceilingTextureCache;
+    int oldCellX = -1;
+    int oldCellY = -1;
 
     void castRayColumn(int x);
     void castRayRow(int y);
