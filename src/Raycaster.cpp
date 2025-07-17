@@ -8,6 +8,8 @@ Raycaster::Raycaster(Renderer &renderer, int screenWidth, int screenHeight)
 
 void Raycaster::setTextureManager(TextureManager& textureManager) {
     this->textureManager = &textureManager;
+    this->textureWidth = textureManager.getTextureWidth();
+    this->textureHeight = textureManager.getTextureHeight();
 }
 
 void Raycaster::setMap(const Map& map) {
@@ -140,12 +142,6 @@ void Raycaster::castRayColumn(int x) {
 }
 
 void Raycaster::castRayRow(int y) {
-    const std::vector<uint32_t> floorTexture = textureManager->getTexture(3);
-    const std::vector<uint32_t> ceilingTexture = textureManager->getTexture(4);
-
-    const int textureWidth = textureManager->getTextureWidth();
-    const int textureHeight = textureManager->getTextureHeight();
-
     // ray direction for the leftmost ray (x = 0) and the rightmost ray (x = width).
     // We need to add or subtract plane vector from player direction vector.
     const double rayDirX0 = player.dirX - player.planeX;
@@ -170,14 +166,21 @@ void Raycaster::castRayRow(int y) {
         // map tile coordinates
         const int cellX = static_cast<int>(floorX);
         const int cellY = static_cast<int>(floorY);
+        if (cellX != oldCellX || cellY != oldCellY) {
+            const int floorType = map.getFloorType(floorX, floorY);
+            floorTextureCache = textureManager->getTexture(floorType);
+            const int ceilingType = map.getCeilingType(cellX, cellY);
+            ceilingTextureCache = textureManager->getTexture(ceilingType);
+        }
+        oldCellX = cellX;
+        oldCellY = cellY;
 
         // texture coordinates
         const int texX = static_cast<int>(textureWidth * (floorX - cellX)) & (textureWidth - 1);
         const int texY = static_cast<int>(textureHeight * (floorY - cellY)) & (textureHeight - 1);
 
-        uint32_t floorColor = floorTexture[textureWidth * texY + texX];
-        uint32_t ceilingColor = ceilingTexture[textureWidth * texY + texX + 1];
-
+        const uint32_t floorColor = floorTextureCache[textureWidth * texY + texX];
+        const uint32_t ceilingColor = ceilingTextureCache[textureWidth * texY + texX];
         renderer->putPixel(x, y, floorColor);
         renderer->putPixel(x, screenHeight - y - 1, ceilingColor);
 
