@@ -19,8 +19,8 @@ private:
     void render();
     void cleanup();
 
-    static constexpr int SCREEN_WIDTH = 1200;
-    static constexpr int SCREEN_HEIGHT = 800;
+    static constexpr int SCREEN_WIDTH = 800;
+    static constexpr int SCREEN_HEIGHT = 640;
     Uint32 time = 0;
     Uint32 lastTime = 0;
     float fps = 0.0f;

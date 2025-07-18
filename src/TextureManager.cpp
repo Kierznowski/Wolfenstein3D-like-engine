@@ -10,6 +10,7 @@ bool TextureManager::loadTextures() {
     if (!this->loadFromFile("./../assets/textures/floor_stones.png", 2)) return false;
     if (!this->loadFromFile("./../assets/textures/floor_wood.png", 3)) return false;
     if (!this->loadFromFile("./../assets/textures/ceiling_teracote.png", 4)) return false;
+    if (!this->loadFromFile("./../assets/textures/sprites/re.png", 5)) return false;
 
     return true;
 }
@@ -21,7 +22,7 @@ bool TextureManager::loadFromFile(const std::string &path, int textureIndex) {
         return false;
     }
 
-    SDL_Surface *formatted = SDL_ConvertSurfaceFormat(surface, SDL_PIXELFORMAT_ABGR8888, 0);
+    SDL_Surface *formatted = SDL_ConvertSurfaceFormat(surface, SDL_PIXELFORMAT_ARGB8888, 0);
     SDL_FreeSurface(surface);
     if (!formatted) {
         std::cerr << "Failed to convert image " << path << std::endl;

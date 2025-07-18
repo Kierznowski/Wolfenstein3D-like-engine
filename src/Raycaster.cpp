@@ -20,7 +20,14 @@ void Raycaster::setPlayer(const Player& player) {
     this->player = player;
 }
 
+void Raycaster::setSprites(const std::vector<Sprite> &sprites) {
+    this->sprites = sprites;
+}
+
+
 void Raycaster::renderFrame() {
+    zBuffer.resize(screenWidth);
+
     for (int y = screenHeight / 2; y < screenHeight; y++) {
         castRayRow(y);
     }
@@ -28,6 +35,8 @@ void Raycaster::renderFrame() {
     for (int x = 0; x < screenWidth; x++) {
         castRayColumn(x);
     }
+
+    renderSprites();
 }
 
 void Raycaster::castRayColumn(int x) {
@@ -139,6 +148,8 @@ void Raycaster::castRayColumn(int x) {
         }
         renderer->putPixel(x, y, color);
     }
+
+    zBuffer[x] = perpWallDist;
 }
 
 void Raycaster::castRayRow(int y) {
@@ -187,4 +198,70 @@ void Raycaster::castRayRow(int y) {
         floorX += floorStepX;
         floorY += floorStepY;
     }
+}
+
+void Raycaster::renderSprites() {
+    // storing sprites sorted by distance from player
+    std::vector<std::pair<double, Sprite>> sortedSprites;
+    for (const Sprite& sprite : sprites) {
+        double dx = sprite.x - player.posX;
+        double dy = sprite.y - player.posY;
+        double distSq = dx * dx + dy * dy;
+        sortedSprites.emplace_back(distSq, sprite);
+    }
+    std::sort(sortedSprites.begin(), sortedSprites.end(),
+        [](const std::pair<double, Sprite>& a, const std::pair<double, Sprite>& b) {
+            return a.first > b.first;
+        });
+
+    for (const auto& [distance, sprite] : sortedSprites) {
+        double spriteX = sprite.x - player.posX;
+        double spriteY = sprite.y - player.posY;
+
+        // Inverse camera matrix transformation
+        double invDet = 1.0 / (player.planeX * player.dirY - player.dirX * player.planeY);
+        double transformX = invDet * (player.dirY * spriteX - player.dirX * spriteY);
+        double transformY = invDet * (-player.planeY * spriteX + player.planeX * spriteY);
+
+        // position on screen (left / right)
+        int spriteScreenX = static_cast<int>((screenWidth / 2) * (1 + transformX / transformY));
+
+        const auto& texture = textureManager->getTexture(sprite.textureIndex);
+        int texWidth = textureManager->getTextureWidth();
+        int texHeight = textureManager->getTextureHeight();
+
+        // scale sprite height on the screen
+        int spriteHeight = std::abs(static_cast<int>(screenHeight / transformY));
+        int drawStartY = -spriteHeight / 2 + screenHeight / 2;
+        if (drawStartY < 0) drawStartY = 0;
+        int drawEndY = spriteHeight / 2 + screenHeight / 2;
+        if (drawEndY >= screenHeight) drawEndY = screenHeight - 1;
+
+        // scale sprite width on screen
+        int spriteWidth = std::abs(static_cast<int>(screenHeight / transformY));
+        int drawStartX = -spriteWidth / 2 + spriteScreenX;
+        if (drawStartX < 0) drawStartX = 0;
+        int drawEndX = spriteWidth / 2 + spriteScreenX;
+        if (drawEndX >= screenWidth) drawEndX = screenWidth - 1;
+
+        // drawing each pixel column
+        for (int stripe = drawStartX; stripe < drawEndX; stripe++) {
+            int texX = static_cast<int>(256 * (stripe - (-spriteWidth / 2 + spriteScreenX)) * texWidth / spriteWidth) / 256;
+            if (transformY > 0 && stripe >= 0 && stripe < screenWidth && transformY < zBuffer[stripe]) {
+                for (int y = drawStartY; y < drawEndY; y++) {
+                    int d = (y) * 256 - screenHeight * 128 + spriteHeight * 128;
+                    int texY = ((d * texHeight) / spriteHeight) / 256;
+
+                    uint32_t color = texture[texY * texWidth + texX];
+                    // check if isn't transparent
+                    if ((color & 0x00FFFFFF) != 0) {
+                        renderer->putPixel(stripe, y, color);
+                    }
+                }
+            }
+        }
+
+
+    }
+
 }

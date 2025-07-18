@@ -3,6 +3,7 @@
 #include "Player.h"
 #include "Map.h"
 #include "TextureManager.h"
+#include "Sprite.h"
 
 class Raycaster {
 public:
@@ -11,6 +12,7 @@ public:
     void setTextureManager(TextureManager& textureManager);
     void setMap(const Map& map);
     void setPlayer(const Player& player);
+    void setSprites(const std::vector<Sprite>& sprites);
 
     void renderFrame();
 private:
@@ -23,6 +25,8 @@ private:
 
     Player player;
     Map map;
+    std::vector<Sprite> sprites;
+    std::vector<double> zBuffer;
     std::vector<uint32_t> floorTextureCache;
     std::vector<uint32_t> ceilingTextureCache;
     int oldCellX = -1;
@@ -30,4 +34,5 @@ private:
 
     void castRayColumn(int x);
     void castRayRow(int y);
+    void renderSprites();
 };

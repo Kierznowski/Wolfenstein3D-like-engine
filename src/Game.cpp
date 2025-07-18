@@ -38,6 +38,11 @@ void Game::init() {
     map.loadMap(0);
     raycaster->setMap(map);
     raycaster->setPlayer(player);
+    const std::vector<Sprite> sprites = {
+        Sprite(4.5, 4.5, 5),
+        Sprite(6.5, 10.5, 5),
+    };
+    raycaster->setSprites(sprites);
 
     if (!IMG_Init(IMG_INIT_PNG)) {
         std::cerr << "Failed to initialize SDL_image! SDL Error: " << IMG_GetError() << std::endl;
