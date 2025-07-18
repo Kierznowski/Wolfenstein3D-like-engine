@@ -19,6 +19,7 @@ add_executable(2_5D_shooter src/main.cpp
         src/Raycaster.cpp
         src/Raycaster.h
         src/TextureManager.cpp
-        src/TextureManager.h)
+        src/TextureManager.h
+        src/Sprite.h)
 
 target_link_libraries(2_5D_shooter ${SDL2_LIBRARIES} SDL2_image::SDL2_image)
