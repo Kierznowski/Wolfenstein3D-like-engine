@@ -65,7 +65,7 @@ void Game::run() {
         render();
         lastTime = time;
         time = SDL_GetTicks();
-        double frameTime = (time - lastTime) / 1000.0;
+        const double frameTime = (time - lastTime) / 1000.0;
         fps = 1.0 / frameTime;
         printf("FPS: %.2f\n", fps);
     }

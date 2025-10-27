@@ -1,11 +1,13 @@
 #include "Map.h"
+
+#include <iostream>
 #include <print>
+#include <sstream>
 
 Map::Map() : width(0), height(0) {
 }
 
-Map::~Map() {
-}
+Map::~Map() = default;
 
 void Map::loadMap(const int worldIndex) {
     loadWallsMap(wallsMaps[worldIndex]);

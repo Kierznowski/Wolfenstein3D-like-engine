@@ -1,5 +1,4 @@
 #pragma once
-#include <cmath>
 
 struct Player {
     double posX = 9.0;

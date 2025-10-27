@@ -2,15 +2,13 @@
 #include <vector>
 #include <string>
 #include <fstream>
-#include <iostream>
-#include <sstream>
 
 class Map {
 public:
     Map();
     ~Map();
 
-    void loadMap(const int worldIndex);
+    void loadMap(int worldIndex);
     int getWidth() const;
     int getHeight() const;
     bool isWall(int x, int y) const;
