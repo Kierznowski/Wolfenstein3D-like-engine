@@ -1,25 +1,21 @@
-cmake_minimum_required(VERSION 3.31)
+cmake_minimum_required(VERSION 3.28)
 project(2_5D_shooter)
 set(CMAKE_CXX_STANDARD 23)
 
 find_package(SDL2 REQUIRED)
-find_package(SDL2_image REQUIRED)
-
 include_directories(${SDL_INCLUDE_DIRS})
 
-add_executable(2_5D_shooter src/main.cpp
-        src/Game.cpp
-        src/Game.h
-        src/Renderer.cpp
-        src/Renderer.h
-        src/Map.cpp
-        src/Map.h
-        src/Player.cpp
-        src/Player.h
-        src/Raycaster.cpp
-        src/Raycaster.h
-        src/TextureManager.cpp
-        src/TextureManager.h
-        src/Sprite.h)
+find_package(SDL2_image REQUIRED)
 
-target_link_libraries(2_5D_shooter ${SDL2_LIBRARIES} SDL2_image::SDL2_image)
+add_executable(2_5D_shooter
+        src/main.cpp
+        src/engine/Renderer.cpp
+        src/engine/Renderer.h
+        src/engine/Game.cpp
+        src/engine/Game.h
+        src/engine/Texture.cpp
+        src/engine/Texture.h
+)
+
+target_include_directories(2_5D_shooter PRIVATE src)
+target_link_libraries(2_5D_shooter PRIVATE ${SDL2_LIBRARIES} SDL2_image::SDL2_image)
