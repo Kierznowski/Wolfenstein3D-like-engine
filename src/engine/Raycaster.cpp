@@ -7,22 +7,21 @@ Raycaster::Raycaster(std::vector<uint32_t>& framebuffer,
     const Map &map,
     const std::vector<std::unique_ptr<Texture>> &walls,
     const std::vector<std::unique_ptr<Texture> > &floorAndCeilingTex,
-    const std::vector<Sprite> sprites) noexcept
+    const std::vector<Sprite>& sprites)
     : framebuffer{framebuffer},
     windowWidth{width},
     windowHeight{height},
     map{map},
     wallTextures{walls},
     floorAndCeilingTextures{floorAndCeilingTex},
-    sprites{sprites} {}
+    sprites{sprites} {
+}
 
 void Raycaster::render(const Player& player) {
-    if (floorAndCeilingTextures.size() != 0) {
-        renderFloorAndCeiling(player);
-    } else {
-        std::fill(framebuffer.begin(), framebuffer.end(), 0xFF444444);
-    }
-    renderWalls(player);
+    std::vector<double> zBuffer(windowWidth);
+    renderFloorAndCeiling(player);
+    renderWalls(player, zBuffer);
+    renderSprites(player, zBuffer);
 }
 
 void Raycaster::renderFloorAndCeiling(const Player& player) {
@@ -69,7 +68,7 @@ void Raycaster::renderFloorAndCeiling(const Player& player) {
     }
 }
 
-void Raycaster::renderWalls(const Player& player) {
+void Raycaster::renderWalls(const Player& player, std::vector<double>& zBuffer) {
     for (int x = 0; x < windowWidth; x++) {
         // calculate ray position
         const double cameraX = 2 * x / static_cast<double>(windowWidth) - 1;
@@ -142,6 +141,7 @@ void Raycaster::renderWalls(const Player& player) {
         } else {
             perpWallDist = sideDistY - deltaDistY;
         }
+        zBuffer[x] = perpWallDist;
 
         // to get perspective we calculate height of the wall from proportions
         const int lineHeight = static_cast<int>(windowHeight / perpWallDist);
@@ -183,3 +183,56 @@ void Raycaster::renderWalls(const Player& player) {
         }
     }
 }
+
+void Raycaster::renderSprites(const Player& player, const std::vector<double>& zBuffer) {
+    std::vector<const Sprite*> sortedSprites;
+    sortedSprites.reserve(sprites.size());
+    for (const Sprite& s : sprites) {
+        sortedSprites.push_back(&s);
+    }
+
+    std::sort(sortedSprites.begin(), sortedSprites.end(), [&](const Sprite* s1, const Sprite* s2) {
+        double distS1 = (player.x - s1->x)*(player.x - s1->x) + (player.y - s1->y)*(player.y - s1->y);
+        double distS2 = (player.x - s2->x)*(player.x - s2->x) + (player.y - s2->y)*(player.y - s2->y);
+        return distS1 > distS2;
+    });
+
+    for (const Sprite* sprite : sortedSprites) {
+        double spriteX = sprite->x - player.x;
+        double spriteY = sprite->y - player.y;
+
+        double invDet = 1.0 / (player.planeX * player.dirY - player.dirX * player.planeY);
+
+        double transformX = invDet * (player.dirY * spriteX - player.dirX * spriteY);
+        double transformY = invDet * (-player.planeY * spriteX + player.planeX * spriteY);
+
+        int spriteScreenX = static_cast<int>((windowWidth / 2) * (1 + transformX / transformY));
+
+        int spriteHeight = std::abs(static_cast<int>(windowHeight / transformY));
+        int drawStartY = -spriteHeight / 2 + windowHeight / 2;
+        int drawEndY = spriteHeight / 2 + windowHeight / 2;
+
+        int spriteWidth = std::abs(static_cast<int>(windowHeight / transformY));
+        int drawStartX = -spriteWidth / 2 + spriteScreenX;
+        int drawEndX = spriteWidth / 2 + spriteScreenX;
+
+        const SDL_Surface* tex = sprite->texture->getSurface();
+
+        for (int stripe = drawStartX; stripe < drawEndX; ++stripe) {
+            int texX = int(256 * (stripe - (-spriteWidth / 2 + spriteScreenX)) * tex->w / spriteWidth) / 256;
+
+            if (transformY > 0 && stripe > 0 && stripe < windowWidth && transformY < zBuffer[stripe]) {
+                for (int y = drawStartY; y < drawEndY; ++y) {
+                    int d = (y) * 256 - windowHeight * 128 + spriteHeight * 128;
+                    int texY = ((d * tex->h) / spriteHeight) / 256;
+
+                    uint32_t color = static_cast<uint32_t*>(tex->pixels)[texY * tex->w + texX];
+                    if ((color & 0x00FFFFFF) != 0) { // przezroczystość (czarny = alpha)
+                        framebuffer[y * windowWidth + stripe] = color;
+                    }
+                }
+            }
+        }
+    }
+}
+

@@ -20,7 +20,6 @@ add_executable(2_5D_shooter
         src/engine/Map.h
         src/engine/Player.h
         src/engine/Sprite.h
-        src/engine/Sprite.cpp
 )
 
 target_include_directories(2_5D_shooter PRIVATE src)

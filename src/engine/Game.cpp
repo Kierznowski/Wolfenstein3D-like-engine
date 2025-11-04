@@ -38,33 +38,6 @@ Game::Game(int width, int height)
             {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1}
         };
 
-    std::vector<Sprite> sprites;
-
-    constexpr int numSprites {19};
-    Sprite sprites[numSprites] = {
-        // lights
-        {20.5, 11.5, 10},
-        {18.5, 4.5, 10},
-        {10.0, 4.5, 10},
-        {10.0, 12.5, 10},
-        {3.5, 6.5, 10},
-        {3.5, 20.5, 10},
-        {3.5, 14.5, 10},
-        {14.5, 20.5, 10},
-        // pillars
-        {18.5, 10.5, 9},
-        {18.5, 11.5, 9},
-        {18.5, 12.5, 9},
-        // barrels
-        {21.5, 1.5, 8},
-        {15.5, 1.5, 8},
-        {16.0, 1.8, 8},
-        {16.2, 1.2, 8},
-        {3.5, 2.5, 8},
-        {9.5, 15.5, 8},
-        {10.0, 15.1, 8},
-        {10.5, 15.8, 8},
-    };
 
     worldMap.copyFrom(tmpMap);
 
@@ -72,6 +45,9 @@ Game::Game(int width, int height)
     wallTextures.emplace_back(std::make_unique<Texture>("./../assets/textures/wall_brick.bmp"));
     floorAndCeilingTextures.emplace_back(std::make_unique<Texture>("./../assets/textures/floor_wood.bmp"));
     floorAndCeilingTextures.emplace_back(std::make_unique<Texture>("./../assets/textures/floor_stones.bmp"));
+    spriteTextures.emplace_back(std::make_unique<Texture>("./../assets/textures/wolftex/barrel.bmp"));
+
+    sprites.emplace_back(3.5, 3.5, spriteTextures[0].get());
 
     raycaster = std::make_unique<Raycaster>(
         renderer.getFramebuffer(),

@@ -32,6 +32,8 @@ private:
     bool running {true};
     std::vector<std::unique_ptr<Texture>> wallTextures;
     std::vector<std::unique_ptr<Texture>> floorAndCeilingTextures;
+    std::vector<std::unique_ptr<Texture>> spriteTextures;
+    std::vector<Sprite> sprites;
 };
 
 
