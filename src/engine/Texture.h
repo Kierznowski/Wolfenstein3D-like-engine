@@ -25,6 +25,10 @@ public:
 
     uint32_t getPixel(int x, int y) const noexcept;
 
+    const SDL_Surface* getSurface() const noexcept {
+        return surface;
+    }
+
 private:
     SDL_Surface* surface{nullptr};
     int width{0};

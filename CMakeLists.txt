@@ -15,6 +15,11 @@ add_executable(2_5D_shooter
         src/engine/Game.h
         src/engine/Texture.cpp
         src/engine/Texture.h
+        src/engine/Raycaster.cpp
+        src/engine/Raycaster.h
+        src/engine/Map.h
+        src/engine/Player.h
+        src/engine/Sprite.h
 )
 
 target_include_directories(2_5D_shooter PRIVATE src)

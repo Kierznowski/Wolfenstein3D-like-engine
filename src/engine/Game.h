@@ -2,45 +2,38 @@
 #define GAME_H
 #include <memory>
 
+#include "Map.h"
+#include "Raycaster.h"
 #include "Renderer.h"
+#include "Sprite.h"
 #include "Texture.h"
 
-struct Player {
-    double x{22.0};
-    double y{12.0};
-    double dirX{-1.0};
-    double dirY{0.0};
-    double planeX{0.0};
-    double planeY{0.66};
-
-    double moveSpeed{3.0}; // tiles per sec
-    double rotationSpeed{2.0}; // rads per sec
-};
-
+class Raycaster;
 
 class Game {
 public:
     Game(int width, int height);
+    ~Game() = default;
+
     void run();
 
 private:
     void update(double dt);
-    void floorCeilingCasting(int w, int h);
-    void ddaRaycasting();
     void handleInput(double dt);
-
-    Renderer renderer;
-    bool running {true};
 
     static constexpr int mapWidth = 24;
     static constexpr int mapHeight = 24;
-    int worldMap[mapWidth][mapHeight];
 
+    Renderer renderer;
+    Map worldMap;
     Player player;
+    std::unique_ptr<Raycaster> raycaster;
 
+    bool running {true};
     std::vector<std::unique_ptr<Texture>> wallTextures;
-    std::vector<std::unique_ptr<Texture>> floorTextures;
-    std::vector<std::unique_ptr<Texture>> ceilingTextures;
+    std::vector<std::unique_ptr<Texture>> floorAndCeilingTextures;
+    std::vector<std::unique_ptr<Texture>> spriteTextures;
+    std::vector<Sprite> sprites;
 };
 
 

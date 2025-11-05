@@ -12,7 +12,7 @@ public:
     ~Renderer();
 
     void clear(uint32_t color = 0x000000FF);
-    void presentFrame(const std::vector<uint32_t>& framebuffer);
+    void presentFrame();
 
     int getWidth() const noexcept {
         return windowWidth;

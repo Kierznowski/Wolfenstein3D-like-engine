@@ -50,7 +50,7 @@ void Renderer::clear(const uint32_t color) {
     std::fill(framebuffer.begin(), framebuffer.end(), color);
 }
 
-void Renderer::presentFrame(const std::vector<uint32_t>& framebuffer) {
+void Renderer::presentFrame() {
     void* pixels {nullptr};
     int pitch;
     if (SDL_LockTexture(texture, nullptr, &pixels, &pitch) == 0) {
