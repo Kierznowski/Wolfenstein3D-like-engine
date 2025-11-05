@@ -46,8 +46,12 @@ Game::Game(int width, int height)
     floorAndCeilingTextures.emplace_back(std::make_unique<Texture>("./../assets/textures/floor_wood.bmp"));
     floorAndCeilingTextures.emplace_back(std::make_unique<Texture>("./../assets/textures/floor_stones.bmp"));
     spriteTextures.emplace_back(std::make_unique<Texture>("./../assets/textures/wolftex/barrel.bmp"));
+    spriteTextures.emplace_back(std::make_unique<Texture>("./../assets/textures/wolftex/pillar.bmp"));
+    spriteTextures.emplace_back(std::make_unique<Texture>("./../assets/textures/wolftex/greenlight.bmp"));
 
-    sprites.emplace_back(3.5, 3.5, spriteTextures[0].get());
+    sprites.emplace_back(3.5, 3.5, spriteTextures[0].get(), 2.0, 128.0);
+    sprites.emplace_back(4.5, 4.5, spriteTextures[1].get(), 1.0, 0.0);
+    sprites.emplace_back(10.5, 10.5, spriteTextures[2].get(), 1.0, 0.0);
 
     raycaster = std::make_unique<Raycaster>(
         renderer.getFramebuffer(),

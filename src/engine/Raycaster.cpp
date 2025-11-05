@@ -170,11 +170,11 @@ void Raycaster::renderWalls(const Player& player, std::vector<double>& zBuffer) 
         if (side == 0 && rayDirX > 0) texX = tex->getWidth() - texX - 1;
         if (side == 1 && rayDirY < 0) texX = tex->getWidth() - texX - 1;
 
-        double step = 1.0 * tex->getHeight() / lineHeight;
-        double texPos = (drawStart - windowHeight / 2 + lineHeight / 2) * step;
+        const double step = 1.0 * tex->getHeight() / lineHeight;
+        double texPos = (drawStart - windowHeight / 2.0 + lineHeight / 2.0) * step;
 
         for (int y = drawStart; y < drawEnd; y++) {
-            int texY = static_cast<int>(texPos) & (tex->getHeight() - 1);
+            const int texY = static_cast<int>(texPos) & (tex->getHeight() - 1);
             texPos += step;
             uint32_t color = tex->getPixel(texX, texY);
             // making 1-side darker. Shifting by 1 bit divides color by 2. Then we set first bit of each byte to 0
@@ -185,6 +185,7 @@ void Raycaster::renderWalls(const Player& player, std::vector<double>& zBuffer) 
 }
 
 void Raycaster::renderSprites(const Player& player, const std::vector<double>& zBuffer) {
+    // Sort sprites from the furthest to nearest
     std::vector<const Sprite*> sortedSprites;
     sortedSprites.reserve(sprites.size());
     for (const Sprite& s : sprites) {
@@ -197,37 +198,59 @@ void Raycaster::renderSprites(const Player& player, const std::vector<double>& z
         return distS1 > distS2;
     });
 
+    // Projection
     for (const Sprite* sprite : sortedSprites) {
-        double spriteX = sprite->x - player.x;
-        double spriteY = sprite->y - player.y;
+        // Translating sprite position to relative to player position
+        const double spriteX = sprite->x - player.x;
+        const double spriteY = sprite->y - player.y;
 
-        double invDet = 1.0 / (player.planeX * player.dirY - player.dirX * player.planeY);
+        // Transforming sprite position with inverse camera matrix
+        // From Lodev's tutorial:
+        // [ planeX   dirX ] -1                                       [ dirY      -dirX ]
+        // [               ]       =  1/(planeX*dirY-dirX*planeY) *   [                 ]
+        // [ planeY   dirY ]                                          [ -planeY  planeX ]
+        const double invDet = 1.0 / (player.planeX * player.dirY - player.dirX * player.planeY);
 
-        double transformX = invDet * (player.dirY * spriteX - player.dirX * spriteY);
-        double transformY = invDet * (-player.planeY * spriteX + player.planeX * spriteY);
+        const double transformX = invDet * (player.dirY * spriteX - player.dirX * spriteY);
+        const double transformY = invDet * (-player.planeY * spriteX + player.planeX * spriteY);
 
-        int spriteScreenX = static_cast<int>((windowWidth / 2) * (1 + transformX / transformY));
+        const int spriteScreenX = static_cast<int>(static_cast<int>(windowWidth / 2) * (1 + transformX / transformY));
 
-        int spriteHeight = std::abs(static_cast<int>(windowHeight / transformY));
-        int drawStartY = -spriteHeight / 2 + windowHeight / 2;
-        int drawEndY = spriteHeight / 2 + windowHeight / 2;
+        // Calculating sprite Height
+        const int spriteHeight = std::abs(static_cast<int>(windowHeight / transformY)) / sprite->scale;
 
-        int spriteWidth = std::abs(static_cast<int>(windowHeight / transformY));
-        int drawStartX = -spriteWidth / 2 + spriteScreenX;
-        int drawEndX = spriteWidth / 2 + spriteScreenX;
+        // Calculating start and end of vertical stripe (from the middle of the screen)
+        // vMoveScreen is shifting by Sprites shift parameter
+        const int vMoveScreen = static_cast<int>(sprite->shift / transformY);
+        int drawStartY = windowHeight / 2 - spriteHeight / 2 + vMoveScreen;
+        int drawEndY = windowHeight / 2 + spriteHeight / 2 + vMoveScreen;
 
-        const SDL_Surface* tex = sprite->texture->getSurface();
+        const int clippedStartY = std::max(drawStartY, 0);
+        const int clippedEndY = std::min(drawEndY, windowHeight);
 
-        for (int stripe = drawStartX; stripe < drawEndX; ++stripe) {
-            int texX = int(256 * (stripe - (-spriteWidth / 2 + spriteScreenX)) * tex->w / spriteWidth) / 256;
+        // Calculating sprite width
+        const int spriteWidth = std::abs(static_cast<int>(windowHeight / transformY)) / sprite->scale;
+        const int drawStartX = spriteScreenX - spriteWidth / 2;
+        const int drawEndX = spriteScreenX + spriteWidth / 2;
+
+        const Texture* tex = sprite->texture;
+        const int texWidth = tex->getWidth();
+        const int texHeight = tex->getHeight();
+
+        // Drawing in vertical stripes, so x first
+        for (int stripe = drawStartX; stripe <= drawEndX; ++stripe) {
+            const int localX = stripe - (spriteScreenX - spriteWidth / 2);
+            const double texXf = (static_cast<double>(localX) / static_cast<double>(spriteWidth)) * texWidth;
+            const int texX = std::clamp(static_cast<int>(texXf), 0, texWidth - 1);
 
             if (transformY > 0 && stripe > 0 && stripe < windowWidth && transformY < zBuffer[stripe]) {
-                for (int y = drawStartY; y < drawEndY; ++y) {
-                    int d = (y) * 256 - windowHeight * 128 + spriteHeight * 128;
-                    int texY = ((d * tex->h) / spriteHeight) / 256;
+                for (int y = clippedStartY; y < clippedEndY; ++y) {
+                    const int localY = y - drawStartY;
+                    const double texYf = (static_cast<double>(localY) / static_cast<double>(spriteHeight)) * texHeight;
+                    const int texY = std::clamp(static_cast<int>(texYf), 0, texHeight - 1);
 
-                    uint32_t color = static_cast<uint32_t*>(tex->pixels)[texY * tex->w + texX];
-                    if ((color & 0x00FFFFFF) != 0) { // przezroczystość (czarny = alpha)
+                    uint32_t color = tex->getPixel(texX, texY);
+                    if ((color & 0x00FFFFFF) != 0) { // black = transparent
                         framebuffer[y * windowWidth + stripe] = color;
                     }
                 }

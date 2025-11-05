@@ -3,8 +3,8 @@
 #include "engine/Game.h"
 
 
-constexpr int WINDOW_W = 720;
-constexpr int WINDOW_H = 640;
+constexpr int WINDOW_W = 640;
+constexpr int WINDOW_H = 480;
 
 int main() {
 
