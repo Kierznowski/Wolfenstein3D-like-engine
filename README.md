@@ -53,8 +53,8 @@ Built as a foundation for future experiments:
 For now it looks like this:
 </br>
 </br>
-<img src="./wolfengine1.png" />
-<img src="./wolfengine2.png" />
+<img src="./Resources/Screenshots/wolfengine1.png" />
+<img src="./Resources/Screenshots/wolfengine2.png" />
 
 
 ## Future Roadmap
