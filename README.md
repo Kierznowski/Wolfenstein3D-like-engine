@@ -15,21 +15,37 @@ Built as a foundation for future experiments:
 
 
 ## Project Structure
-    /assets
-    ├── /maps
-    └── /textures
-        ├── /wolftex          # Original Wolf3D textures
-        └── /textures         # Other textures
-    /src    
-    ├── main.cpp               # Entry point
-    └── /engine 
-        ├── Game.h/.cpp        # Game loop, player, world update    
-        ├── Map.h              # Map struct
-        ├── Player.h           # Player struct 
-        ├── Raycaster.h/.cpp   # Raycaster DDA algorithm
-        ├── Renderer.h/.cpp    # Framebuffer, SDL integration   
-        ├── Sprite.h           # Sprite struct 
-        └── Texture.h/.cpp     # Texture loading and access   
+    /root
+    └── /Engine               
+        └── CmakeLists.txt
+        └── /include/Engine       
+            ├── Assets.h
+            ├── Engine.h           
+            ├── ...
+            └── Texture.h        
+        └── /src                 
+            ├── Assets.cpp
+            ├── Engine.cpp           
+            ├── ...
+            └── Texture.cpp   
+    └── /Game
+        └── CmakeLists.txt
+        └── /include/Game
+            ├── Game.h                 
+            ├── GameState.h
+            ├── ...                
+            └── MainMenuState.h
+         └── /src                 
+            ├── main.cpp
+            ├── Game.cpp           
+            ├── ...
+            └── MainMenuState.cpp
+    └── CmakeLists.txt
+    └── /Resources
+        ├── /fonts   
+        ├── /maps
+        ├── ...
+        └── /textures
         
 
 ## Screenshots
