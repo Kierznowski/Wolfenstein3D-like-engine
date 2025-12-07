@@ -5,9 +5,8 @@ project(Game)
 add_executable(Game
         src/main.cpp
         src/Game.cpp
-        include/Game/GameState.h
-        include/Game/MainMenuState.h
         src/MainMenuState.cpp
+        src/GameplayState.cpp
 )
 
 target_include_directories(Game
@@ -16,5 +15,5 @@ target_include_directories(Game
 )
 
 target_link_libraries(Game
-    PRIVATE Engine
+        PRIVATE Engine
 )

@@ -7,6 +7,8 @@
 #include "Renderer.h"
 #include "Sprite.h"
 #include "Texture.h"
+#include "GameState.h"
+#include "CommandQueue.h"
 
 class Engine {
 public:
@@ -19,6 +21,8 @@ public:
         return renderer;
     }
 
+    void render();
+
     void loadWallTexture(const std::string& path);
     void loadFloorCeilingTexture(const std::string& path);
     void loadSpriteTexture(const std::string& path);
@@ -30,10 +34,16 @@ public:
     void loadSprite(const Sprite& sprite);
     void setPlayer(const Player& player);
 
+    void setState(std::unique_ptr<GameState> gameState);
+
 private:
     void initRaycaster();
     void update(double dt);
-    void handleInput(double dt);
+    void handleInput();
+
+    CommandQueue commandQueue;
+
+    std::unique_ptr<GameState> currentState;
 
     Renderer renderer;
     Player player;

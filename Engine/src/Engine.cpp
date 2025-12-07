@@ -3,7 +3,7 @@
 
 #include <chrono>
 #include <iostream>
-#include <cmath>
+#include <queue>
 
 constexpr double FIXED_TICK_TIME = 1.0 / 60.0;
 
@@ -12,7 +12,11 @@ Engine::Engine(int width, int height, const std::string& title)
 }
 
 void Engine::run() {
-    std::cout << wallMap.getWidth() << ", " << wallMap.getHeight() << std::endl;
+    std::cout << "Starting engine";
+    if (currentState == nullptr) {
+        throw std::logic_error("Engine state not set");
+    }
+
     initRaycaster();
 
     using clock = std::chrono::high_resolution_clock;
@@ -32,6 +36,7 @@ void Engine::run() {
             if (event.type == SDL_KEYDOWN && event.key.keysym.sym == SDLK_ESCAPE) {
                 running = false;
             }
+            currentState->handleInput(event);
         }
 
         auto newTime = clock::now();
@@ -41,14 +46,18 @@ void Engine::run() {
         if (deltaTime > 0.25) deltaTime = 0.25;
         accumulator += deltaTime;
 
+
+        currentState->handleInput(commandQueue);
+
         while (accumulator >= FIXED_TICK_TIME) {
             update(FIXED_TICK_TIME);
             accumulator -= FIXED_TICK_TIME;
         }
 
-        renderer.clear();
-        raycaster->render(player);
-        renderer.presentFrame();
+        currentState->render(*this);
+        if (currentState->isFinished) {
+            currentState = std::move(currentState->nextState);
+        }
 
         frames++;
         fpsTimer += deltaTime;
@@ -59,6 +68,12 @@ void Engine::run() {
             fpsTimer = 0.0;
         }
     }
+}
+
+void Engine::render() {
+    renderer.clear();
+    raycaster->render(player);
+    renderer.presentFrame();
 }
 
 void Engine::initRaycaster() {
@@ -72,6 +87,17 @@ void Engine::initRaycaster() {
         wallTextures,
         floorAndCeilingTextures,
         sprites);
+}
+
+void Engine::update(double dt) {
+    for (const auto& command : commandQueue.getQueue()) {
+        command->execute(player, dt);
+    }
+    commandQueue.clear();
+}
+
+void Engine::setState(std::unique_ptr<GameState> gameState) {
+    currentState = std::move(gameState);
 }
 
 void Engine::loadWallTexture(const std::string& path) {
@@ -88,6 +114,7 @@ void Engine::loadSpriteTexture(const std::string &path) {
 
 void Engine::loadWallMap(const std::string& path) {
     wallMap.load(path);
+    player.wallMap = &wallMap;
 }
 
 void Engine::loadFloorMap(const std::string& path) {
@@ -104,58 +131,4 @@ void Engine::loadSprite(const Sprite& sprite) {
 
 void Engine::setPlayer(const Player& newPlayer) {
     player = newPlayer;
-}
-
-void Engine::update(double dt) {
-    handleInput(dt);
-}
-
-void Engine::handleInput(double dt) {
-    const Uint8* state = SDL_GetKeyboardState(nullptr);
-
-    const double moveStep = player.moveSpeed * dt;
-    const double rotationStep = player.rotationSpeed * dt;
-
-    if (state[SDL_SCANCODE_W]) {
-        double nextX = player.x + player.dirX * moveStep;
-        double nextY = player.y + player.dirY * moveStep;
-
-        if (wallMap.at(static_cast<int>(nextX), static_cast<int>(player.y)) == 0) {
-            player.x = nextX;
-        }
-        if (wallMap.at(static_cast<int>(player.x), static_cast<int>(nextY)) == 0) {
-            player.y = nextY;
-        }
-    }
-    if (state[SDL_SCANCODE_S]) {
-        double nextX = player.x - player.dirX * moveStep;
-        double nextY = player.y - player.dirY * moveStep;
-
-        if (wallMap.at(static_cast<int>(nextX), static_cast<int>(player.y)) == 0) {
-            player.x = nextX;
-        }
-        if (wallMap.at(static_cast<int>(player.x), static_cast<int>(nextY)) == 0) {
-            player.y = nextY;
-        }
-    }
-
-    if (state[SDL_SCANCODE_A]) {
-        const double oldDirX = player.dirX;
-        player.dirX = player.dirX * std::cos(rotationStep) - player.dirY * std::sin(rotationStep);
-        player.dirY = oldDirX * std::sin(rotationStep) + player.dirY * std::cos(rotationStep);
-
-        const double oldPlaneX = player.planeX;
-        player.planeX = player.planeX * std::cos(rotationStep) - player.planeY * std::sin(rotationStep);
-        player.planeY = oldPlaneX * std::sin(rotationStep) + player.planeY * std::cos(rotationStep);
-    }
-
-    if (state[SDL_SCANCODE_D]) {
-        const double oldDirX = player.dirX;
-        player.dirX = player.dirX * std::cos(-rotationStep) - player.dirY * std::sin(-rotationStep);
-        player.dirY = oldDirX * std::sin(-rotationStep) + player.dirY * std::cos(-rotationStep);
-
-        const double oldPlaneX = player.planeX;
-        player.planeX = player.planeX * std::cos(-rotationStep) - player.planeY * std::sin(-rotationStep);
-        player.planeY = oldPlaneX * std::sin(-rotationStep) + player.planeY * std::cos(-rotationStep);
-    }
 }
