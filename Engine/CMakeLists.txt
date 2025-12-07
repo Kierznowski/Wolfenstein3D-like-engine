@@ -9,6 +9,10 @@ add_library(Engine STATIC
         src/Texture.cpp
         src/Map.cpp
         src/Assets.cpp
+        src/Player.cpp
+        include/Engine/commands/MoveBackwardCommand.h
+        include/Engine/commands/TernLeftCommand.h
+        include/Engine/commands/TurnRightCommand.h
 )
 
 target_include_directories(Engine

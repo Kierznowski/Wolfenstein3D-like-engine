@@ -3,9 +3,9 @@
 #include "Engine/GameState.h"
 #include "Engine/Engine.h"
 
-class MainMenuState : public GameState {
+class GameplayState : public GameState {
 public:
-    MainMenuState() = default;
+    GameplayState() = default;
 
     void handleInput(SDL_Event& event);
     void handleInput(CommandQueue& commandQueue);

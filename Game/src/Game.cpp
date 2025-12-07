@@ -1,61 +1,43 @@
 #include "Game/Game.h"
 
-#include <chrono>
-
 #include "Game/MainMenuState.h"
 
-Game::Game()
-    : engine(800, 600, "Game Title"),
-    currentState(std::make_unique<MainMenuState>())
-{}
+#include <Engine/Assets.h>
+#include <iostream>
+
+#include "Game/GameplayState.h"
+
+Game::Game() = default;
 
 void Game::run() {
-    using clock = std::chrono::high_resolution_clock;
-    auto current = clock::now();
+    engine = new Engine(800, 600, "Game Title");
 
-    while (true) {
-        auto now = clock::now();
-        double dt = std::chrono::duration<double>(now - current).count();
-        current = now;
+    loadAssets();
 
-        currentState->handleInput(engine);
-        currentState->update(engine, dt);
-        currentState->render(engine);
-
-        if (currentState->isFinished()) {
-            auto next = currentState->nextState();
-            if (!next) break;
-            currentState = std::move(next);
-        }
-    }
-
+    engine->setState(std::make_unique<MainMenuState>());
+    engine->run();
 }
 
-/*
-void Game::loadLevel1() {
 
-    engine.loadWallMap(Assets::path("/maps/world1/sample_map_walls.txt"));
-    engine.loadFloorMap(Assets::path("/maps/world1/sample_map_floor.txt"));
-    engine.loadCeilingMap(Assets::path("/maps/world1/sample_map_ceiling.txt"));
+void Game::loadAssets() {
 
-    engine.loadWallTexture(Assets::path("/textures/wall_stones.bmp") );
-    engine.loadWallTexture( Assets::path("/textures/wall_brick.bmp") );
+    engine->loadWallMap(Assets::path("/maps/world1/sample_map_walls.txt"));
+    engine->loadFloorMap(Assets::path("/maps/world1/sample_map_floor.txt"));
+    engine->loadCeilingMap(Assets::path("/maps/world1/sample_map_ceiling.txt"));
 
-    engine.loadFloorCeilingTexture( Assets::path("/textures/floor_wood.bmp") );
-    engine.loadFloorCeilingTexture( Assets::path("/textures/ceiling_teracote.bmp") );
+    engine->loadWallTexture(Assets::path("/textures/wall_stones.bmp") );
+    engine->loadWallTexture( Assets::path("/textures/wall_brick.bmp") );
 
-    engine.loadSpriteTexture( Assets::path("/textures/wolftex/barrel.bmp") );
-    engine.loadSpriteTexture( Assets::path("/textures/wolftex/pillar.bmp") );
-    engine.loadSpriteTexture( Assets::path("/textures/wolftex/greenlight.bmp") );
+    engine->loadFloorCeilingTexture( Assets::path("/textures/floor_wood.bmp") );
+    engine->loadFloorCeilingTexture( Assets::path("/textures/ceiling_teracote.bmp") );
 
-    Player player {2.0, 2.0};
-    engine.setPlayer(player);
-
-
+    engine->loadSpriteTexture(Assets::path("/textures/wolftex/barrel.bmp") );
+    engine->loadSpriteTexture(Assets::path("/textures/wolftex/pillar.bmp") );
+    engine->loadSpriteTexture(Assets::path("/textures/wolftex/greenlight.bmp") );
 
     /*
     engine.addSprite(Sprite(3.5, 3.5, ));
     engine.addSprite(Sprite(4.5, 4.5, ...));
-    engine.addSprite(Sprite(10.5, 10.5, ...));#1#
+    engine.addSprite(Sprite(10.5, 10.5, ...));
+    */
 }
-*/
