@@ -9,10 +9,6 @@ public:
     explicit Texture(const std::string& path);
     ~Texture();
 
-    // disabled copying of Texture objects
-    Texture(const Texture&) = delete;
-    Texture& operator=(const Texture&) = delete;
-
     int getWidth() const noexcept {
         return width;
     }

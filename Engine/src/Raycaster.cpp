@@ -239,7 +239,7 @@ void Raycaster::renderSprites(const Player& player, const std::vector<double>& z
         const int drawStartX = spriteScreenX - spriteWidth / 2;
         const int drawEndX = spriteScreenX + spriteWidth / 2;
 
-        const Texture* tex = sprite->texture;
+        const auto tex = sprite->model->texture;
         const int texWidth = tex->getWidth();
         const int texHeight = tex->getHeight();
 

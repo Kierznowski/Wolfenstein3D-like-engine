@@ -1,13 +1,19 @@
 #pragma once
-#include "Texture.h"
+#include "SpriteModel.h"
 
 struct Sprite {
+    Sprite(double posX, double posY, const std::shared_ptr<SpriteModel>& spriteModel, double scale, double shift)
+        : x(posX), y(posY), model(spriteModel), scale(scale), shift(shift)
+    {}
+
+    Sprite(double posX, double posY, const std::shared_ptr<SpriteModel>& spriteModel)
+        : x(posX), y(posY), model(spriteModel)
+    {}
+
     double x;
     double y;
-    const Texture* texture;
-    const double scale;
-    const double shift;
 
-    Sprite(double posX, double posY, const Texture* texture, double scale, double shift)
-        : x{posX}, y{posY}, texture{texture}, scale{scale}, shift{shift} {}
+    const double scale {1.0};
+    const double shift {0.0};
+    const std::shared_ptr<SpriteModel> model;
 };

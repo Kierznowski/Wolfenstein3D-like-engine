@@ -31,13 +31,13 @@ void Game::loadAssets() {
     engine->loadFloorCeilingTexture( Assets::path("/textures/floor_wood.bmp") );
     engine->loadFloorCeilingTexture( Assets::path("/textures/ceiling_teracote.bmp") );
 
+    /*
     engine->loadSpriteTexture(Assets::path("/textures/wolftex/barrel.bmp") );
     engine->loadSpriteTexture(Assets::path("/textures/wolftex/pillar.bmp") );
     engine->loadSpriteTexture(Assets::path("/textures/wolftex/greenlight.bmp") );
-
-    /*
-    engine.addSprite(Sprite(3.5, 3.5, ));
-    engine.addSprite(Sprite(4.5, 4.5, ...));
-    engine.addSprite(Sprite(10.5, 10.5, ...));
     */
+
+    auto barrelModel = engine->loadSpriteModel("barrel", Assets::path("/textures/wolftex/barrel.bmp"));
+    engine->loadSprite(Sprite(3.5, 3.5, barrelModel));
+
 }
