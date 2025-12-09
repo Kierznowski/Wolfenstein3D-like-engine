@@ -100,16 +100,23 @@ void Engine::setState(std::unique_ptr<GameState> gameState) {
     currentState = std::move(gameState);
 }
 
+std::shared_ptr<SpriteModel> Engine::loadSpriteModel(const std::string& id, const std::string& texturePath) {
+    auto texture = std::make_shared<Texture>(texturePath);
+    auto model = std::make_shared<SpriteModel>(texture);
+    spriteModels[id] = model;
+    return model;
+}
+
+void Engine::loadSprite(const Sprite& sprite) {
+    sprites.emplace_back(sprite);
+}
+
 void Engine::loadWallTexture(const std::string& path) {
     wallTextures.emplace_back(std::make_unique<Texture>(path));
 }
 
 void Engine::loadFloorCeilingTexture(const std::string &path) {
     floorAndCeilingTextures.emplace_back(std::make_unique<Texture>(path));
-}
-
-void Engine::loadSpriteTexture(const std::string &path) {
-    spriteTextures.emplace_back(std::make_unique<Texture>(path));
 }
 
 void Engine::loadWallMap(const std::string& path) {
@@ -125,9 +132,7 @@ void Engine::loadCeilingMap(const std::string& path) {
     ceilingMap.load(path);
 }
 
-void Engine::loadSprite(const Sprite& sprite) {
-    this->sprites.emplace_back(sprite);
-}
+
 
 void Engine::setPlayer(const Player& newPlayer) {
     player = newPlayer;

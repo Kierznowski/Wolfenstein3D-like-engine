@@ -17,7 +17,8 @@ public:
         const Map& ceilingMap,
         const std::vector<std::unique_ptr<Texture>>& walls,
         const std::vector<std::unique_ptr<Texture>>& floorAndCeilingTex,
-        const std::vector<Sprite>& sprites);
+        const std::vector<Sprite>& sprites
+        );
 
     void render(const Player& player);
 

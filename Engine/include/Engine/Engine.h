@@ -1,6 +1,7 @@
 #pragma once
 
 #include <memory>
+#include <unordered_map>
 
 #include "Map.h"
 #include "Raycaster.h"
@@ -25,21 +26,22 @@ public:
 
     void loadWallTexture(const std::string& path);
     void loadFloorCeilingTexture(const std::string& path);
-    void loadSpriteTexture(const std::string& path);
 
     void loadWallMap(const std::string& path);
     void loadFloorMap(const std::string& path);
     void loadCeilingMap(const std::string& path);
 
+    std::shared_ptr<SpriteModel> loadSpriteModel(const std::string& id, const std::string& texturePath);
     void loadSprite(const Sprite& sprite);
+
     void setPlayer(const Player& player);
+    std::unordered_map<std::string, std::shared_ptr<SpriteModel>> spriteModels;
 
     void setState(std::unique_ptr<GameState> gameState);
 
 private:
     void initRaycaster();
     void update(double dt);
-    void handleInput();
 
     CommandQueue commandQueue;
 

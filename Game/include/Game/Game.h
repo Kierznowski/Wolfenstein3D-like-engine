@@ -8,6 +8,5 @@ public:
 
 private:
     Engine* engine{};
-
     void loadAssets();
 };

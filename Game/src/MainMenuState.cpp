@@ -30,9 +30,9 @@ void MainMenuState::render(Engine &engine) {
     Renderer& renderer = engine.getRenderer();
     renderer.clear();
 
-    renderer.drawText(50, 50, "RAYCASTER ENGINE MENU");
-    renderer.drawText(50, 150, (selected == 0 ? "> Start Game" : " Start Game"));
-    renderer.drawText(50, 200, (selected == 1 ? "> Multiplayer" : " Multiplayer"));
+    renderer.drawText(50, 50, "NET-2.5D-SHOOTER-GAME");
+    renderer.drawText(50, 150, (selected == 0 ? "> Create server" : " Create server"));
+    renderer.drawText(50, 200, (selected == 1 ? "> Connect to server" : " Connect to server"));
     renderer.drawText(50, 250, (selected == 2 ? "> Exit" : " Exit"));
 
     renderer.presentFrame();
