@@ -5,11 +5,16 @@
 
 class MainMenuState : public GameState {
 public:
-    MainMenuState() = default;
+    explicit MainMenuState(Engine& engine)
+        : engine(engine)
+    {};
 
-    void handleInput(SDL_Event& event) override;
-    void handleInput(CommandQueue& commandQueue) override;
-    void render(Engine& engine) override;
+    void handleInput(const SDL_Event& event, CommandQueue& commandQueue) override;
+    void handleRealtimeInput(CommandQueue& commandQueue) override;
+    void render() override;
 
     int selected = 0;
+
+private:
+    Engine& engine;
 };

@@ -1,33 +1,24 @@
 #include "Game/GameplayState.h"
 
-#include "Game/commands/MoveForwardCommand.h"
-#include "Game/commands/MoveBackwardCommand.h"
-#include "Game/commands/TurnLeftCommand.h"
-#include "Game/commands/TurnRightCommand.h"
+void GameplayState::handleInput(const SDL_Event& event, CommandQueue& commandQueue) {
+}
 
-void GameplayState::handleInput(CommandQueue& commandQueue) {
+void GameplayState::handleRealtimeInput(CommandQueue& commandQueue) {
     const Uint8* state = SDL_GetKeyboardState(nullptr);
 
-    if (state[SDL_SCANCODE_W]) {
-        commandQueue.push(std::make_unique<MoveForwardCommand>());
-    }
-    if (state[SDL_SCANCODE_S]) {
-        commandQueue.push(std::make_unique<MoveBackwardCommand>());
-    }
-    if (state[SDL_SCANCODE_A]) {
-        commandQueue.push(std::make_unique<TurnLeftCommand>());
-    }
-    if (state[SDL_SCANCODE_D]) {
-        commandQueue.push(std::make_unique<TurnRightCommand>());
-    }
+    if (state[SDL_SCANCODE_W])
+        commandQueue.push(&moveForwardCommand);
+
+    if (state[SDL_SCANCODE_S])
+        commandQueue.push(&moveBackwardCommand);
+
+    if (state[SDL_SCANCODE_A])
+        commandQueue.push(&turnLeftCommand);
+
+    if (state[SDL_SCANCODE_D])
+        commandQueue.push(&turnRightCommand);
 }
 
-void GameplayState::handleInput(SDL_Event& event) {
-}
-
-void GameplayState::render(Engine& engine) {
-    engine.render();
-}
-
-void checkTransitions(Engine& engine) {
+void GameplayState::render() {
+    engine_.render();
 }

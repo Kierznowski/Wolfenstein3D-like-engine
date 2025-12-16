@@ -6,7 +6,11 @@
 #include "Map.h"
 #include "Texture.h"
 #include "Player.h"
-#include "Sprite.h"
+#include "Entity/Entity.h"
+#include "Entity/Sprite/Sprite.h"
+
+struct SpriteInstance;
+class GameObject;
 
 class Raycaster {
 public:
@@ -17,10 +21,10 @@ public:
         const Map& ceilingMap,
         const std::vector<std::unique_ptr<Texture>>& walls,
         const std::vector<std::unique_ptr<Texture>>& floorAndCeilingTex,
-        const std::vector<Sprite>& sprites
+        const std::vector<std::unique_ptr<Entity>>& entities
         );
 
-    void render(const Player& player);
+    void render(const Player& player) const;
 
 private:
     std::vector<uint32_t>& framebuffer;
@@ -31,9 +35,9 @@ private:
     const Map& ceilingMap;
     const std::vector<std::unique_ptr<Texture>>& wallTextures;
     const std::vector<std::unique_ptr<Texture>>& floorAndCeilingTextures;
-    const std::vector<Sprite>& sprites;
+    const std::vector<std::unique_ptr<Entity>>& entities_;
 
-    void renderFloorAndCeiling(const Player& player);
-    void renderWalls(const Player& player, std::vector<double>& zBuffer);
-    void renderSprites(const Player& player, const std::vector<double>& zBuffer);
+    void renderFloorAndCeiling(const Player& player) const;
+    void renderWalls(const Player& player, std::vector<double>& zBuffer) const;
+    void renderSprites(const Player& player, const std::vector<double>& zBuffer) const;
 };

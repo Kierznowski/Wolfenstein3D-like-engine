@@ -7,6 +7,7 @@ public:
     void run();
 
 private:
-    Engine* engine{};
-    void loadAssets();
+    std::unique_ptr<Player> player;
+
+    void loadAssets(Engine& engine) const;
 };
