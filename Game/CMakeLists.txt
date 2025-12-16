@@ -7,6 +7,7 @@ add_executable(Game
         src/Game.cpp
         src/MainMenuState.cpp
         src/GameplayState.cpp
+        include/Game/entities/HealthEntity.h
 )
 
 target_include_directories(Game

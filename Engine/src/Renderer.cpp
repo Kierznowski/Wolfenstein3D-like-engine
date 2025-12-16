@@ -5,7 +5,7 @@
 #include <stdexcept>
 #include <SDL2/SDL_ttf.h>
 
-Renderer::Renderer(int width, int height, const std::string &title)
+Renderer::Renderer(const int width, const int height, const std::string &title)
     : windowWidth(width), windowHeight(height), framebuffer(width * height) {
     if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_EVENTS) != 0) {
         throw std::runtime_error(SDL_GetError());

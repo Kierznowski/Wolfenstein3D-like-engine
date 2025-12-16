@@ -1,15 +1,17 @@
 #include "Engine/Raycaster.h"
 #include <vector>
 
+#include "../../Game/include/Game/Game.h"
+
 Raycaster::Raycaster(std::vector<uint32_t>& framebuffer,
-    const int width,
-    const int height,
-    const Map &wallMap,
-    const Map &floorMap,
-    const Map &ceilingMap,
-    const std::vector<std::unique_ptr<Texture>> &walls,
-    const std::vector<std::unique_ptr<Texture> > &floorAndCeilingTex,
-    const std::vector<Sprite>& sprites)
+                     const int width,
+                     const int height,
+                     const Map &wallMap,
+                     const Map &floorMap,
+                     const Map &ceilingMap,
+                     const std::vector<std::unique_ptr<Texture>> &walls,
+                     const std::vector<std::unique_ptr<Texture> > &floorAndCeilingTex,
+                     const std::vector<std::unique_ptr<Entity>>& entities)
     : framebuffer{framebuffer},
     windowWidth{width},
     windowHeight{height},
@@ -18,17 +20,17 @@ Raycaster::Raycaster(std::vector<uint32_t>& framebuffer,
     ceilingMap{ceilingMap},
     wallTextures{walls},
     floorAndCeilingTextures{floorAndCeilingTex},
-    sprites{sprites} {
-}
+    entities_{entities}
+{}
 
-void Raycaster::render(const Player& player) {
+void Raycaster::render(const Player& player) const {
     std::vector<double> zBuffer(windowWidth);
     renderFloorAndCeiling(player);
     renderWalls(player, zBuffer);
     renderSprites(player, zBuffer);
 }
 
-void Raycaster::renderFloorAndCeiling(const Player& player) {
+void Raycaster::renderFloorAndCeiling(const Player& player) const {
     const double posX = player.x;
     const double posY = player.y;
     const double dirX = player.dirX;
@@ -74,7 +76,7 @@ void Raycaster::renderFloorAndCeiling(const Player& player) {
     }
 }
 
-void Raycaster::renderWalls(const Player& player, std::vector<double>& zBuffer) {
+void Raycaster::renderWalls(const Player& player, std::vector<double>& zBuffer) const {
     for (int x = 0; x < windowWidth; x++) {
         // calculate ray position
         const double cameraX = 2 * x / static_cast<double>(windowWidth) - 1;
@@ -115,9 +117,8 @@ void Raycaster::renderWalls(const Player& player, std::vector<double>& zBuffer) 
         }
 
         // hit detection
-        bool hit {false};
         int side {}; // 0 = X side of the wall hit, 1 = Y side hit
-        while (!hit) {
+        while (true) {
             if (sideDistX < sideDistY) {
                 sideDistX += deltaDistX;
                 mapX += stepX;
@@ -129,12 +130,11 @@ void Raycaster::renderWalls(const Player& player, std::vector<double>& zBuffer) 
             }
 
             if (mapX < 0 || mapX >= wallMap.getWidth() || mapY < 0 || mapY >= wallMap.getHeight()) {
-                hit = true;
                 break;
             }
 
             if (wallMap.at(mapX, mapY) > 0) {
-                hit = true;
+                break;
             }
         }
 
@@ -190,25 +190,28 @@ void Raycaster::renderWalls(const Player& player, std::vector<double>& zBuffer) 
     }
 }
 
-void Raycaster::renderSprites(const Player& player, const std::vector<double>& zBuffer) {
+void Raycaster::renderSprites(const Player& player, const std::vector<double>& zBuffer) const {
     // Sort sprites from the furthest to nearest
-    std::vector<const Sprite*> sortedSprites;
-    sortedSprites.reserve(sprites.size());
-    for (const Sprite& s : sprites) {
-        sortedSprites.push_back(&s);
+    std::vector<Entity*> sortedObjects;
+    sortedObjects.reserve(entities_.size());
+
+    for (const std::unique_ptr<Entity>& entity : entities_) {
+        if (entity->visible_) {
+            sortedObjects.push_back(entity.get());
+        }
     }
 
-    std::sort(sortedSprites.begin(), sortedSprites.end(), [&](const Sprite* s1, const Sprite* s2) {
-        double distS1 = (player.x - s1->x)*(player.x - s1->x) + (player.y - s1->y)*(player.y - s1->y);
-        double distS2 = (player.x - s2->x)*(player.x - s2->x) + (player.y - s2->y)*(player.y - s2->y);
+    std::sort(sortedObjects.begin(), sortedObjects.end(), [&](const Entity* s1, const Entity* s2) {
+        const double distS1 = (player.x - s1->position_.posX)*(player.x - s1->position_.posX) + (player.y - s1->position_.posY)*(player.y - s1->position_.posY);
+        const double distS2 = (player.x - s2->position_.posX)*(player.x - s2->position_.posX) + (player.y - s2->position_.posY)*(player.y - s2->position_.posY);
         return distS1 > distS2;
     });
 
     // Projection
-    for (const Sprite* sprite : sortedSprites) {
+    for (const Entity* entity : sortedObjects) {
         // Translating sprite position to relative to player position
-        const double spriteX = sprite->x - player.x;
-        const double spriteY = sprite->y - player.y;
+        const double objectX = entity->position_.posX - player.x;
+        const double objectY = entity->position_.posY - player.y;
 
         // Transforming sprite position with inverse camera matrix
         // From Lodev's tutorial:
@@ -217,17 +220,17 @@ void Raycaster::renderSprites(const Player& player, const std::vector<double>& z
         // [ planeY   dirY ]                                          [ -planeY  planeX ]
         const double invDet = 1.0 / (player.planeX * player.dirY - player.dirX * player.planeY);
 
-        const double transformX = invDet * (player.dirY * spriteX - player.dirX * spriteY);
-        const double transformY = invDet * (-player.planeY * spriteX + player.planeX * spriteY);
+        const double transformX = invDet * (player.dirY * objectX - player.dirX * objectY);
+        const double transformY = invDet * (-player.planeY * objectX + player.planeX * objectY);
 
         const int spriteScreenX = static_cast<int>(static_cast<int>(windowWidth / 2) * (1 + transformX / transformY));
 
         // Calculating sprite Height
-        const int spriteHeight = std::abs(static_cast<int>(windowHeight / transformY)) / sprite->scale;
+        const int spriteHeight = std::abs(static_cast<int>(windowHeight / transformY)) / entity->sprite_->scale;
 
         // Calculating start and end of vertical stripe (from the middle of the screen)
         // vMoveScreen is shifting by Sprites shift parameter
-        const int vMoveScreen = static_cast<int>(sprite->shift / transformY);
+        const int vMoveScreen = static_cast<int>(entity->sprite_->shift / transformY);
         int drawStartY = windowHeight / 2 - spriteHeight / 2 + vMoveScreen;
         int drawEndY = windowHeight / 2 + spriteHeight / 2 + vMoveScreen;
 
@@ -235,11 +238,11 @@ void Raycaster::renderSprites(const Player& player, const std::vector<double>& z
         const int clippedEndY = std::min(drawEndY, windowHeight);
 
         // Calculating sprite width
-        const int spriteWidth = std::abs(static_cast<int>(windowHeight / transformY)) / sprite->scale;
+        const int spriteWidth = std::abs(static_cast<int>(windowHeight / transformY)) / entity->sprite_->scale;
         const int drawStartX = spriteScreenX - spriteWidth / 2;
         const int drawEndX = spriteScreenX + spriteWidth / 2;
 
-        const auto tex = sprite->model->texture;
+        const auto tex = entity->sprite_->model->texture;
         const int texWidth = tex->getWidth();
         const int texHeight = tex->getHeight();
 

@@ -10,6 +10,8 @@ add_library(Engine STATIC
         src/Map.cpp
         src/Assets.cpp
         src/Player.cpp
+        include/Engine/Entity/InteractiveEntity.h
+        include/Engine/Entity/DamageableEntity.h
 )
 
 target_include_directories(Engine

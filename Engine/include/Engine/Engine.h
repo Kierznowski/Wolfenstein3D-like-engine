@@ -1,54 +1,72 @@
 #pragma once
 
+#include <chrono>
 #include <memory>
 #include <unordered_map>
 
 #include "Map.h"
 #include "Raycaster.h"
 #include "Renderer.h"
-#include "Sprite.h"
+#include "Entity/Sprite/Sprite.h"
 #include "Texture.h"
 #include "GameState.h"
-#include "CommandQueue.h"
+#include "Command/CommandQueue.h"
+#include "Entity/Entity.h"
 
 class Engine {
 public:
-    Engine(int width, int height, const std::string& title);
+    Engine() = default ;
     ~Engine() = default;
 
-    void run();
-
-    Renderer& getRenderer() {
-        return renderer;
+    void setWindowSize(const int width, const int height) {
+        windowWidth = width;
+        windowHeight = height;
     }
 
-    void render();
+    Renderer* getRenderer() const {
+        return renderer.get();
+    }
 
+    void setPlayer(Player* player) {
+        player_ = player;
+    }
+
+    void run();
+    void stop() {
+        running = false;
+    }
+    void loadEntity(std::unique_ptr<Entity> entity) {
+        entities_.push_back(std::move(entity));
+    }
+
+    void render() const;
     void loadWallTexture(const std::string& path);
     void loadFloorCeilingTexture(const std::string& path);
-
     void loadWallMap(const std::string& path);
     void loadFloorMap(const std::string& path);
     void loadCeilingMap(const std::string& path);
-
     std::shared_ptr<SpriteModel> loadSpriteModel(const std::string& id, const std::string& texturePath);
-    void loadSprite(const Sprite& sprite);
-
-    void setPlayer(const Player& player);
-    std::unordered_map<std::string, std::shared_ptr<SpriteModel>> spriteModels;
-
     void setState(std::unique_ptr<GameState> gameState);
 
-private:
-    void initRaycaster();
-    void update(double dt);
+    std::unordered_map<std::string, std::shared_ptr<SpriteModel>> spriteModels;
 
+private:
+    int windowWidth {800};
+    int windowHeight {600};
+    std::string gameTitle {"2.5DEngine"};
+    std::unique_ptr<Renderer> renderer;
+    std::unique_ptr<Raycaster> raycaster;
     CommandQueue commandQueue;
 
-    std::unique_ptr<GameState> currentState;
+    void initPlayer() const;
+    void initRaycaster();
+    void initRenderer();
 
-    Renderer renderer;
-    Player player;
+    void update(double dt);
+
+    Player* player_ = nullptr;
+
+    std::unique_ptr<GameState> currentState;
 
     Map wallMap;
     Map floorMap;
@@ -56,10 +74,7 @@ private:
 
     std::vector<std::unique_ptr<Texture>> wallTextures;
     std::vector<std::unique_ptr<Texture>> floorAndCeilingTextures;
-    std::vector<std::unique_ptr<Texture>> spriteTextures;
-    std::vector<Sprite> sprites;
-
-    std::unique_ptr<Raycaster> raycaster;
+    std::vector<std::unique_ptr<Entity>> entities_;
 
     bool running {true};
 };
