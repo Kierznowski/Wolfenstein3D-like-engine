@@ -19,6 +19,10 @@ public:
 
     uint32_t getPixel(int x, int y) const noexcept;
 
+    std::vector<uint32_t>& getPixels() {
+        return pixels;
+    };
+
     const SDL_Surface* getSurface() const noexcept {
         return surface;
     }

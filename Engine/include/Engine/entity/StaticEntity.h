@@ -5,18 +5,14 @@ struct StaticEntity : Entity {
     StaticEntity(const double posX,
         const double posY,
         const double radius,
-        const Sprite* sprite)
+        std::unique_ptr<Sprite> sprite=nullptr)
+    : Entity(posX, posY, radius, std::move(sprite), EntityType::STATIC)
     {
-        position_ = {posX, posY};
-        radius_ = radius;
-        sprite_ = std::make_unique<Sprite>(*sprite);
         solid_ = true;
         interactive_ = false;
         visible_ = true;
-        hp_ = false;
     };
 
+    void interact(Player& player) override {};
     void update(double dt) override {};
-
-    void interact(const Player& player) override {};
 };

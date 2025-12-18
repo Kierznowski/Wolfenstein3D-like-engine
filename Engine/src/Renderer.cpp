@@ -1,9 +1,11 @@
-#include "Engine/Renderer.h"
-#include "Engine/Assets.h"
+#include "../include/Engine/renderer/Renderer.h"
+#include "../include/Engine/utils/Assets.h"
+#include "Engine/utils/Viewport.h"
 
 #include <cstring>
 #include <stdexcept>
 #include <SDL2/SDL_ttf.h>
+
 
 Renderer::Renderer(const int width, const int height, const std::string &title)
     : windowWidth(width), windowHeight(height), framebuffer(width * height) {
@@ -59,7 +61,15 @@ void Renderer::clear() {
     std::fill(framebuffer.begin(), framebuffer.end(), 0xFF000000);
 }
 
-void Renderer::presentFrame() {
+void Renderer::clearViewport(const Viewport &viewport, const uint32_t color) {
+    for (int y = viewport.y; y < viewport.y + viewport.height; y++) {
+        for (int x = viewport.x; x < viewport.x + viewport.width; x++) {
+            framebuffer[y * windowWidth + x] = color;
+        }
+    }
+}
+
+void Renderer::presentFrame() const {
     void* pixels {nullptr};
     int pitch;
     if (SDL_LockTexture(texture, nullptr, &pixels, &pitch) == 0) {
@@ -71,7 +81,7 @@ void Renderer::presentFrame() {
     SDL_RenderPresent(renderer);
 }
 
-void Renderer::drawText(int posX, int posY, const std::string& text) {
+void Renderer::drawText(const int posX, const int posY, const std::string& text) {
     constexpr SDL_Color textColor = {255, 255, 255, 255};
     SDL_Surface *textSurface = TTF_RenderText_Solid(font, text.c_str(), textColor);
     if (!textSurface) {
@@ -102,4 +112,31 @@ void Renderer::drawText(int posX, int posY, const std::string& text) {
         }
     }
     SDL_FreeSurface(textSurface);
+}
+
+void Renderer::drawTexturedRect(const int dstX, const int dstY, const int w, const int h, Texture* tex, const SDL_Rect& src) {
+    const std::vector<uint32_t>& srcPixels = tex->getPixels();
+    const int texW = tex->getWidth();
+
+    for (int y = 0; y < h; y++) {
+        const int fbY = dstY + y;
+        if (fbY < 0 || fbY >= windowHeight) continue;
+
+        const int srcY = src.y + (y * src.h) / h;
+
+        for (int x = 0; x < w; x++) {
+            const int fbX = dstX + x;
+            if (fbX < 0 || fbX >= windowWidth) continue;
+
+            const int srcX = src.x + (x * src.w) / w;
+            const uint32_t color = srcPixels[srcY * texW + srcX];
+
+            if ((color & 0x00FFFFFF) == 0) continue;
+            framebuffer[fbY * windowWidth + fbX] = color;
+        }
+    }
+}
+
+void Renderer::drawPixel(int x, int y, uint32_t color) {
+    framebuffer[y * windowWidth + x] = color;
 }

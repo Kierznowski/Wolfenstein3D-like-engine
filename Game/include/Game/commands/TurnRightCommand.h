@@ -5,6 +5,6 @@
 class TurnRightCommand : public Command {
 public:
     void execute(Player& player, double dt) const override {
-        player.turnRight(dt);
+        player.moveRight(dt);
     }
 };

@@ -1,7 +1,7 @@
 #include "../include/Engine/Player.h"
 
+#include <algorithm>
 #include <cmath>
-#include <iostream>
 
 void Player::update(const double dt) {
 
@@ -38,32 +38,51 @@ void Player::moveBackward(const double dt) {
     }
 }
 
-void Player::turnLeft(const double dt) {
-    const double rotationStep = rotationSpeed_ * dt;
+void Player::moveLeft(const double dt) {
+    const double moveStep = moveSpeed_ * dt;
 
-    const double oldDirX = dirX;
-    dirX = dirX * std::cos(rotationStep) - dirY * std::sin(rotationStep);
-    dirY = oldDirX * std::sin(rotationStep) + dirY * std::cos(rotationStep);
+    // vector perpendicular to player dir, on the left
+    const double strafeX = -dirY;
+    const double strafeY =  dirX;
 
-    const double oldPlaneX = planeX;
-    planeX = planeX * std::cos(rotationStep) - planeY * std::sin(rotationStep);
-    planeY = oldPlaneX * std::sin(rotationStep) + planeY * std::cos(rotationStep);
+    const double nextX = x + strafeX * moveStep;
+    const double nextY = y + strafeY * moveStep;
+
+    if (wallMap->at(static_cast<int>(nextX), static_cast<int>(y)) == 0
+        && !collisionWithEntity(nextX, y)) {
+        x = nextX;
+        }
+
+    if (wallMap->at(static_cast<int>(x), static_cast<int>(nextY)) == 0
+        && !collisionWithEntity(x, nextY)) {
+        y = nextY;
+        }
 
 }
 
-void Player::turnRight(const double dt) {
-    const double rotationStep = rotationSpeed_ * dt;
+void Player::moveRight(const double dt) {
+    const double moveStep = moveSpeed_ * dt;
 
-    const double oldDirX = dirX;
-    dirX = dirX * std::cos(-rotationStep) - dirY * std::sin(-rotationStep);
-    dirY = oldDirX * std::sin(-rotationStep) + dirY * std::cos(-rotationStep);
+    // vector perpendicular to player dir, on the right
+    const double strafeX = dirY;
+    const double strafeY = -dirX;
 
-    const double oldPlaneX = planeX;
-    planeX = planeX * std::cos(-rotationStep) - planeY * std::sin(-rotationStep);
-    planeY = oldPlaneX * std::sin(-rotationStep) + planeY * std::cos(-rotationStep);
+    const double nextX = x + strafeX * moveStep;
+    const double nextY = y + strafeY * moveStep;
+
+    if (wallMap->at(static_cast<int>(nextX), static_cast<int>(y)) == 0
+        && !collisionWithEntity(nextX, y)) {
+        x = nextX;
+        }
+
+    if (wallMap->at(static_cast<int>(x), static_cast<int>(nextY)) == 0
+        && !collisionWithEntity(x, nextY)) {
+        y = nextY;
+        }
+
 }
 
-bool Player::collisionWithEntity(double testX, double testY) const {
+bool Player::collisionWithEntity(double testX, double testY) {
     if (!entities) return false;
 
     for (const auto& e : *entities) {
@@ -82,4 +101,37 @@ bool Player::collisionWithEntity(double testX, double testY) const {
         }
     }
     return false;
+}
+
+void Player::requestFire() {
+    if (ammo_ > 0) {
+        wantsToFire_ = true;
+        ammo_ -= 1;
+    }
+}
+
+bool Player::consumeFireRequest() {
+    const bool r = wantsToFire_;
+    wantsToFire_ = false;
+    return r;
+}
+
+void Player::decreaseHealth(const int boost) {
+    health_ -= boost;
+    health_ = std::max(0, health_);
+}
+
+void Player::increaseHealth(const int boost) {
+    health_ += boost;
+    health_ = std::min(100, health_);
+}
+
+void Player::turnWithMouse(const double rotationStep) {
+        const double oldDirX = dirX;
+        dirX = dirX * std::cos(rotationStep) - dirY * std::sin(rotationStep);
+        dirY = oldDirX * std::sin(rotationStep) + dirY * std::cos(rotationStep);
+
+        const double oldPlaneX = planeX;
+        planeX = planeX * std::cos(rotationStep) - planeY * std::sin(rotationStep);
+        planeY = oldPlaneX * std::sin(rotationStep) + planeY * std::cos(rotationStep);
 }

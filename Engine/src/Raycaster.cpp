@@ -1,27 +1,30 @@
-#include "Engine/Raycaster.h"
+#include "../include/Engine/renderer/Raycaster.h"
 #include <vector>
 
 #include "../../Game/include/Game/Game.h"
 
-Raycaster::Raycaster(std::vector<uint32_t>& framebuffer,
-                     const int width,
-                     const int height,
-                     const Map &wallMap,
-                     const Map &floorMap,
-                     const Map &ceilingMap,
-                     const std::vector<std::unique_ptr<Texture>> &walls,
-                     const std::vector<std::unique_ptr<Texture> > &floorAndCeilingTex,
-                     const std::vector<std::unique_ptr<Entity>>& entities)
-    : framebuffer{framebuffer},
-    windowWidth{width},
-    windowHeight{height},
-    wallMap{wallMap},
-    floorMap{floorMap},
-    ceilingMap{ceilingMap},
-    wallTextures{walls},
-    floorAndCeilingTextures{floorAndCeilingTex},
-    entities_{entities}
-{}
+Raycaster::Raycaster(
+    std::vector<uint32_t>& framebuffer,
+    const Viewport& viewport,
+    const Map &wallMap,
+    const Map &floorMap,
+    const Map &ceilingMap,
+    const std::vector<std::unique_ptr<Texture>>& walls,
+    const std::vector<std::unique_ptr<Texture>>& floorAndCeilingTex,
+    const std::vector<std::unique_ptr<Entity>>& entities)
+        : framebuffer{framebuffer},
+        viewport(viewport),
+        windowWidth{viewport.width},
+        windowHeight{viewport.height},
+        offsetX{viewport.x},
+        offsetY{viewport.y},
+        wallMap{wallMap},
+        floorMap{floorMap},
+        ceilingMap{ceilingMap},
+        wallTextures{walls},
+        floorAndCeilingTextures{floorAndCeilingTex},
+        entities_{entities} {
+}
 
 void Raycaster::render(const Player& player) const {
     std::vector<double> zBuffer(windowWidth);
@@ -67,11 +70,11 @@ void Raycaster::renderFloorAndCeiling(const Player& player) const {
             floorY += floorStepY;
 
             const uint32_t floorColor = floorAndCeilingTextures[0]->getPixel(tx, ty);
-            framebuffer[y * windowWidth + x] = floorColor;
+            framebuffer[(offsetY + y) * windowWidth + (offsetX + x)] = floorColor;
 
             const int ceilingY = windowHeight - y - 1;
             const uint32_t ceilColor = floorAndCeilingTextures[1]->getPixel(tx, ty);
-            framebuffer[ceilingY * windowWidth + x] = ceilColor;
+            framebuffer[(offsetY + ceilingY) * windowWidth + (offsetX + x)] = ceilColor;
         }
     }
 }
@@ -185,7 +188,7 @@ void Raycaster::renderWalls(const Player& player, std::vector<double>& zBuffer) 
             uint32_t color = tex->getPixel(texX, texY);
             // making 1-side darker. Shifting by 1 bit divides color by 2. Then we set first bit of each byte to 0
             if (side == 1) color = (color >> 1) & 0x7F7F7F7F;
-            framebuffer[y * windowWidth + x] = color;
+            framebuffer[(offsetY + y) * windowWidth + (offsetX + x)] = color;
         }
     }
 }
@@ -242,7 +245,7 @@ void Raycaster::renderSprites(const Player& player, const std::vector<double>& z
         const int drawStartX = spriteScreenX - spriteWidth / 2;
         const int drawEndX = spriteScreenX + spriteWidth / 2;
 
-        const auto tex = entity->sprite_->model->texture;
+        const auto tex = entity->sprite_->model->texture.get();
         const int texWidth = tex->getWidth();
         const int texHeight = tex->getHeight();
 
@@ -260,7 +263,7 @@ void Raycaster::renderSprites(const Player& player, const std::vector<double>& z
 
                     uint32_t color = tex->getPixel(texX, texY);
                     if ((color & 0x00FFFFFF) != 0) { // black = transparent
-                        framebuffer[y * windowWidth + stripe] = color;
+                        framebuffer[(offsetY + y) * windowWidth + stripe] = color;
                     }
                 }
             }

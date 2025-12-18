@@ -1,10 +1,10 @@
 #include "Game/MainMenuState.h"
 
-#include "Engine/Renderer.h"
+#include "../../Engine/include/Engine/renderer/Renderer.h"
 #include "Game/GameplayState.h"
 
 
-void MainMenuState::handleInput(const SDL_Event& event, CommandQueue& command_queue) {
+void MainMenuState::handleInput(const SDL_Event& event, CommandQueue& commandQueue) {
     if (event.type == SDL_KEYDOWN) {
         switch (event.key.keysym.sym) {
             case SDLK_UP:

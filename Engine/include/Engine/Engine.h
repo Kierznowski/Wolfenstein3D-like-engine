@@ -5,22 +5,33 @@
 #include <unordered_map>
 
 #include "Map.h"
-#include "Raycaster.h"
-#include "Renderer.h"
-#include "Entity/Sprite/Sprite.h"
+#include "renderer/Raycaster.h"
+#include "renderer/Renderer.h"
+#include "entity/Sprite/Sprite.h"
 #include "Texture.h"
 #include "GameState.h"
+#include "hud/HUD.h"
 #include "Command/CommandQueue.h"
-#include "Entity/Entity.h"
+#include "Engine/entity/Entity.h"
 
 class Engine {
 public:
-    Engine() = default ;
+    Engine(const int windowWidth, const int windowHeight)
+        : windowWidth(windowWidth), windowHeight(windowHeight)
+    {};
     ~Engine() = default;
 
     void setWindowSize(const int width, const int height) {
         windowWidth = width;
         windowHeight = height;
+    }
+
+    int getWindowWidth() const {
+        return windowWidth;
+    }
+
+    int getWindowHeight() const {
+        return windowHeight;
     }
 
     Renderer* getRenderer() const {
@@ -35,11 +46,16 @@ public:
     void stop() {
         running = false;
     }
-    void loadEntity(std::unique_ptr<Entity> entity) {
-        entities_.push_back(std::move(entity));
+
+    Map& getWallMap() {
+        return wallMap;
     }
 
     void render() const;
+
+    void loadEntity(std::unique_ptr<Entity> entity) {
+        entities_.push_back(std::move(entity));
+    }
     void loadWallTexture(const std::string& path);
     void loadFloorCeilingTexture(const std::string& path);
     void loadWallMap(const std::string& path);
@@ -47,10 +63,12 @@ public:
     void loadCeilingMap(const std::string& path);
     std::shared_ptr<SpriteModel> loadSpriteModel(const std::string& id, const std::string& texturePath);
     void setState(std::unique_ptr<GameState> gameState);
+    void loadHud(std::unique_ptr<HUD> hud);
 
     std::unordered_map<std::string, std::shared_ptr<SpriteModel>> spriteModels;
 
 private:
+    const int HUD_HEIGHT {120};
     int windowWidth {800};
     int windowHeight {600};
     std::string gameTitle {"2.5DEngine"};
@@ -61,6 +79,8 @@ private:
     void initPlayer() const;
     void initRaycaster();
     void initRenderer();
+
+    void fireHitscan() const;
 
     void update(double dt);
 
@@ -77,4 +97,6 @@ private:
     std::vector<std::unique_ptr<Entity>> entities_;
 
     bool running {true};
+    std::unique_ptr<HUD> hud_;
+    std::unique_ptr<Viewport> gameplayArea_ = std::make_unique<Viewport>(0, 0, windowWidth, windowHeight - HUD_HEIGHT);
 };

@@ -6,11 +6,11 @@ class CommandQueue {
 public:
     CommandQueue() = default;
 
-    void push(const Command* command) {
-        queue_.emplace_back(command);
+    void push(std::unique_ptr<Command> command) {
+        queue_.emplace_back(std::move(command));
     }
 
-    std::vector<const Command*>& getQueue() {
+    std::vector<std::unique_ptr<Command>>& getQueue() {
         return queue_;
     }
 
@@ -19,5 +19,5 @@ public:
     }
 
 private:
-    std::vector<const Command*> queue_;
+    std::vector<std::unique_ptr<Command>> queue_;
 };

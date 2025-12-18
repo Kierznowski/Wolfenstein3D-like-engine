@@ -3,11 +3,10 @@
 #include <memory>
 #include <vector>
 
-#include "Map.h"
-#include "Texture.h"
-#include "Player.h"
-#include "Entity/Entity.h"
-#include "Entity/Sprite/Sprite.h"
+#include "../Map.h"
+#include "../Texture.h"
+#include "../entity/Entity.h"
+#include "../utils/Viewport.h"
 
 struct SpriteInstance;
 class GameObject;
@@ -15,7 +14,7 @@ class GameObject;
 class Raycaster {
 public:
     Raycaster(std::vector<uint32_t>& framebuffer,
-        int width, int height,
+        const Viewport& viewport,
         const Map& wallMap,
         const Map& floorMap,
         const Map& ceilingMap,
@@ -28,8 +27,11 @@ public:
 
 private:
     std::vector<uint32_t>& framebuffer;
+    const Viewport& viewport;
     const int windowWidth;
     const int windowHeight;
+    const int offsetX;
+    const int offsetY;
     const Map& wallMap;
     const Map& floorMap;
     const Map& ceilingMap;

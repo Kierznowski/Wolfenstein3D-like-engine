@@ -1,10 +1,12 @@
 #include "Engine/Engine.h"
 
-#include "Engine/Raycaster.h"
+#include "../include/Engine/renderer/Raycaster.h"
 
 #include <chrono>
 #include <iostream>
 #include <queue>
+
+#include "Engine/entity/DamageableEntity.h"
 
 constexpr double FIXED_TICK_TIME = 1.0 / 60.0;
 
@@ -14,9 +16,11 @@ void Engine::run() {
     if (currentState == nullptr) {
         throw std::logic_error("Engine state not set");
     }
+
     initPlayer();
     initRenderer();
     initRaycaster();
+    if (hud_) hud_->init(*renderer, *player_);
 
     using clock = std::chrono::high_resolution_clock;
     auto currentTime = clock::now();
@@ -42,7 +46,7 @@ void Engine::run() {
         accumulator += deltaTime;
 
         while (accumulator >= FIXED_TICK_TIME) {
-            update(FIXED_TICK_TIME);
+            update(deltaTime);
             accumulator -= FIXED_TICK_TIME;
         }
 
@@ -60,21 +64,33 @@ void Engine::run() {
 }
 
 void Engine::update(const double dt) {
-    for (const Command* command : commandQueue.getQueue()) {
+    for (const auto& command : commandQueue.getQueue()) {
         command->execute(*player_, dt);
     }
     commandQueue.clear();
 
+    if (player_->consumeFireRequest()) {
+        fireHitscan();
+    }
+
     player_->update(dt);
 
-    for (const std::unique_ptr<Entity>& entity : entities_) {
-        entity->update(dt);
+    for (int i = 0; i < entities_.size(); i++) {
+        if (!entities_[i]->alive) {
+            entities_.erase(entities_.begin() + i);
+            continue;
+        }
+        entities_[i]->update(dt);
     }
 }
 
 void Engine::render() const {
     renderer->clear();
     raycaster->render(*player_);
+    if (hud_) {
+        hud_->updateHealth(*renderer, *player_);
+        hud_->updateAmmo(*renderer, *player_);
+    }
     renderer->presentFrame();
 }
 
@@ -89,14 +105,42 @@ void Engine::initRenderer() {
 void Engine::initRaycaster() {
     raycaster = std::make_unique<Raycaster>(
         renderer->getFramebuffer(),
-        windowWidth,
-        windowHeight,
+        *gameplayArea_,
         wallMap,
         floorMap,
         ceilingMap,
         wallTextures,
         floorAndCeilingTextures,
         entities_);
+}
+
+void Engine::fireHitscan() const {
+    constexpr double STEP = 0.05;
+    constexpr double UPPER_BOUND = 100.0;
+    double rayX = player_->x;
+    double rayY = player_->y;
+
+    for (double dist = 0.0; dist < UPPER_BOUND; dist += STEP) {
+        rayX += player_->dirX * STEP;
+        rayY += player_->dirY * STEP;
+
+        if (wallMap.at(static_cast<int>(rayX), static_cast<int>(rayY)) != 0) {
+            return;
+        }
+
+        for (auto& entity : entities_) {
+
+            const double dx = rayX - entity->position_.posX;
+            const double dy = rayY - entity->position_.posY;
+            const double r = entity->radius_;
+            if (dx * dx + dy * dy < r * r) {
+                if (entity->type_ == EntityType::DAMAGEABLE) {
+                    dynamic_cast<DamageableEntity *>(entity.get())->onHit(*player_, 10);
+                }
+                return;
+            }
+        }
+    }
 }
 
 void Engine::setState(std::unique_ptr<GameState> gameState) {
@@ -129,4 +173,8 @@ void Engine::loadFloorMap(const std::string& path) {
 
 void Engine::loadCeilingMap(const std::string& path) {
     ceilingMap.load(path);
+}
+
+void Engine::loadHud(std::unique_ptr<HUD> hud) {
+    hud_ = std::move(hud);
 }
