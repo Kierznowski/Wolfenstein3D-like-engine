@@ -8,10 +8,10 @@ add_library(Engine STATIC
         src/Renderer.cpp
         src/Texture.cpp
         src/Map.cpp
-        src/Assets.cpp
+        src/utils/Assets.cpp
         src/Player.cpp
-        include/Engine/Entity/InteractiveEntity.h
-        include/Engine/Entity/DamageableEntity.h
+        src/hud/HUD.cpp
+        src/utils/BitmapFont.cpp
 )
 
 target_include_directories(Engine

@@ -3,7 +3,7 @@
 #include "Command/CommandQueue.h"
 #include <SDL2/SDL.h>
 
-#include "Renderer.h"
+#include "renderer/Renderer.h"
 
 class Engine;
 

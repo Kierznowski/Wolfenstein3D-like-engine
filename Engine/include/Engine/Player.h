@@ -3,7 +3,7 @@
 #include <memory>
 
 #include "Engine/Map.h"
-#include "Entity/Entity.h"
+#include "entity/Entity.h"
 
 class Player {
 public:
@@ -19,26 +19,34 @@ public:
     double radius{0.3};
     const Map* wallMap {};
     const std::vector<std::unique_ptr<Entity>>* entities = nullptr;
-    int getHealth() const {
+
+    [[nodiscard]] int health() const {
         return health_;
     }
-    void addHealth(const int boost) {
-        health_ += boost;
-        health_ = std::min<int>(health_, 100);
+
+    [[nodiscard]] int ammo() const {
+        return ammo_;
     }
-    void removeHealth(const int boost) {
-        health_ -= boost;
-    }
+
+    void increaseHealth(int boost);
+    void decreaseHealth(int boost);
 
     void moveForward(double dt);
     void moveBackward(double dt);
-    void turnLeft(double dt);
-    void turnRight(double dt);
+    void moveLeft(double dt);
+    void moveRight(double dt);
+    void turnWithMouse(double rotationStep);
     void update(double dt);
+    void requestFire();
+    bool consumeFireRequest();
 private:
-    double moveSpeed_{8.0}; // tiles per sec
-    double rotationSpeed_{5.0}; // rads per sec
-    int health_{100};
+    double moveSpeed_{5.0}; // tiles per sec
+    double rotationSpeed_{0.9}; // rads per sec
+    int health_{80};
+    int ammo_{50};
+    bool wantsToFire_{false};
+    const double MOUSE_SENSITIVITY{0.01};
 
-    bool collisionWithEntity(double testX, double testY) const;
+    bool collisionWithEntity(double testX, double testY);
+
 };

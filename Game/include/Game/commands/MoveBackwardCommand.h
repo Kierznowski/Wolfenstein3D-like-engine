@@ -1,10 +1,9 @@
 #pragma once
-#include "../../../../Engine/include/Engine/Command/Command.h"
-#include "../../../../Engine/include/Engine/Player.h"
+#include "Engine/Command/Command.h"
 
 class MoveBackwardCommand : public Command {
 public:
-    void execute(Player& player, double dt) const override {
+    void execute(Player& player, const double dt) const override {
         player.moveBackward(dt);
     }
 };

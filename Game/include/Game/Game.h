@@ -10,4 +10,5 @@ private:
     std::unique_ptr<Player> player;
 
     void loadAssets(Engine& engine) const;
+    void createHud(Engine& engine) const;
 };
