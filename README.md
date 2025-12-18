@@ -8,8 +8,11 @@ A simple Wolfenstein 3D–style 2.5D engine written from scratch in modern C++ u
 - Raycasting using DDA algorithm (like the original Wolfenstein 3D)
 - Textured walls, floor, ceiling and sprites rendering
 - Fixed timestep game loop with frame timing and FPS counter
+- Mouse (rotation, shot) and keyboard (WASD) control
 - Entity hierarchy (pickups, interactive, solid etc.)
 - Basic colision detection with walls and solid entities
+- Shooting, destroying objects (without animation for now), health pickups
+- Basic HUD with ammo and health info
 
 Built as a foundation for future experiments:
 - networking
@@ -62,7 +65,6 @@ For now it looks like this:
 ## Future Roadmap
 
 - Enemies
-- mouse rotation (for now W, A, S, D)
 - Dynamic lighting / shading
 - Map editor or procedural maps
 - Multiplayer experiments (UDP / TCP)
