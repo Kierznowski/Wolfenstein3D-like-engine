@@ -7,29 +7,29 @@
 class Texture {
 public:
     explicit Texture(const std::string& path);
-    ~Texture();
+    ~Texture() = default;
 
-    int getWidth() const noexcept {
-        return width;
+    int getWidth() const  {
+        return width_;
     }
 
-    int getHeight() const noexcept {
-        return height;
+    int getHeight() const {
+        return height_;
     }
-
-    uint32_t getPixel(int x, int y) const noexcept;
 
     std::vector<uint32_t>& getPixels() {
-        return pixels;
+        return pixels_;
     };
 
-    const SDL_Surface* getSurface() const noexcept {
-        return surface;
+    const SDL_Surface* getSurface() const {
+        return surface_;
     }
 
+    uint32_t getPixel(int x, int y) const;
+
 private:
-    SDL_Surface* surface{nullptr};
-    int width{0};
-    int height{0};
-    std::vector<uint32_t> pixels;
+    int width_{0};
+    int height_{0};
+    SDL_Surface* surface_{nullptr};
+    std::vector<uint32_t> pixels_;
 };

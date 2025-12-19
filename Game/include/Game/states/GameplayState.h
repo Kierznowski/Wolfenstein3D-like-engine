@@ -1,10 +1,10 @@
 #pragma once
 
-#include "commands/FireCommand.h"
-#include "commands/MoveBackwardCommand.h"
-#include "commands/MoveForwardCommand.h"
-#include "commands/TurnLeftCommand.h"
-#include "commands/TurnRightCommand.h"
+#include "../commands/FireCommand.h"
+#include "../commands/MoveBackwardCommand.h"
+#include "../commands/MoveForwardCommand.h"
+#include "../commands/TurnLeftCommand.h"
+#include "../commands/TurnRightCommand.h"
 #include "Engine/GameState.h"
 #include "Engine/Engine.h"
 

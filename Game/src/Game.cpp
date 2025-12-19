@@ -1,30 +1,29 @@
 #include "Game/Game.h"
 
-#include "Game/MainMenuState.h"
-
-#include <../../Engine/include/Engine/utils/Assets.h>
-
 #include "Engine/entity/DamageableEntity.h"
 #include "Engine/entity/PickupEntity.h"
 #include "Engine/entity/StaticEntity.h"
 #include "Game/entities/DamagableBarrelEntity.h"
 #include "Game/entities/HealthEntity.h"
 
+#include "../include/Game/states/MainMenuState.h"
+#include <../../Engine/include/Engine/utils/Assets.h>
+
 Game::Game() = default;
 
 void Game::run() {
     Engine engine{800, 640};
 
-    player = std::make_unique<Player>();
-    engine.setPlayer(player.get());
+    player_ = std::make_unique<Player>();
+    engine.setPlayer(std::move(player_));
 
-    createHud(engine);
     loadAssets(engine);
+    createHud(engine);
     engine.setState(std::make_unique<MainMenuState>(engine));
     engine.run();
 }
 
-void Game::createHud(Engine& engine) const {
+void Game::createHud(Engine& engine) {
     auto font = std::make_unique<BitmapFont>(Assets::path("/fonts/bitmapFont1.bmp"), 16, 17,
         "0123456789 ABCDEFGHIJKLMNOPQRSTUVWXYZ");
 

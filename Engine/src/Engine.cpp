@@ -1,26 +1,24 @@
 #include "Engine/Engine.h"
-
 #include "../include/Engine/renderer/Raycaster.h"
+#include "Engine/entity/DamageableEntity.h"
 
 #include <chrono>
 #include <iostream>
 #include <queue>
-
-#include "Engine/entity/DamageableEntity.h"
+#include <cassert>
 
 constexpr double FIXED_TICK_TIME = 1.0 / 60.0;
 
 void Engine::run() {
-    std::cout << "Starting engine";
-
-    if (currentState == nullptr) {
-        throw std::logic_error("Engine state not set");
-    }
+    assert(currentState_ && "Engine GameState not set before Engine::run()");
+    assert(player_ && "Player not set before Engine::run()");
+    assert(wallMap_ && "Map not initialized before Engine::run()");
 
     initPlayer();
     initRenderer();
     initRaycaster();
-    if (hud_) hud_->init(*renderer, *player_);
+
+    if (hud_) hud_->init(*renderer_, *player_);
 
     using clock = std::chrono::high_resolution_clock;
     auto currentTime = clock::now();
@@ -30,13 +28,13 @@ void Engine::run() {
     double fpsTimer = 0.0;
     double fps = 0.0;
 
-    while (running) {
+    while (running_) {
         SDL_Event event;
         while (SDL_PollEvent(&event)) {
-            if (event.type == SDL_QUIT) running = false;
-            currentState->handleInput(event, commandQueue);
+            if (event.type == SDL_QUIT) running_ = false;
+            currentState_->handleInput(event, commandQueue_);
         }
-        currentState->handleRealtimeInput(commandQueue);
+        currentState_->handleRealtimeInput(commandQueue_);
 
         auto newTime = clock::now();
         std::chrono::duration<double> frameTime = newTime - currentTime;
@@ -50,7 +48,7 @@ void Engine::run() {
             accumulator -= FIXED_TICK_TIME;
         }
 
-        currentState->render();
+        currentState_->render();
 
         frames++;
         fpsTimer += deltaTime;
@@ -64,16 +62,14 @@ void Engine::run() {
 }
 
 void Engine::update(const double dt) {
-    for (const auto& command : commandQueue.getQueue()) {
+    for (const auto& command : commandQueue_.getQueue()) {
         command->execute(*player_, dt);
     }
-    commandQueue.clear();
+    commandQueue_.clear();
 
     if (player_->consumeFireRequest()) {
         fireHitscan();
     }
-
-    player_->update(dt);
 
     for (int i = 0; i < entities_.size(); i++) {
         if (!entities_[i]->alive) {
@@ -85,13 +81,14 @@ void Engine::update(const double dt) {
 }
 
 void Engine::render() const {
-    renderer->clear();
-    raycaster->render(*player_);
+    renderer_->clear();
+    raycaster_->render(*player_);
     if (hud_) {
-        hud_->updateHealth(*renderer, *player_);
-        hud_->updateAmmo(*renderer, *player_);
+        hud_->updateHealth(*renderer_, *player_);
+        hud_->updateAmmo(*renderer_, *player_);
+        hud_->drawMiniMap(*renderer_, *player_);
     }
-    renderer->presentFrame();
+    renderer_->presentFrame();
 }
 
 void Engine::initPlayer() const {
@@ -99,18 +96,18 @@ void Engine::initPlayer() const {
 }
 
 void Engine::initRenderer() {
-    renderer = std::make_unique<Renderer>(windowWidth, windowHeight, gameTitle);
+    renderer_ = std::make_unique<Renderer>(windowWidth_, windowHeight_, gameTitle_);
 }
 
 void Engine::initRaycaster() {
-    raycaster = std::make_unique<Raycaster>(
-        renderer->getFramebuffer(),
+    raycaster_ = std::make_unique<Raycaster>(
+        renderer_->getFramebuffer(),
         *gameplayArea_,
-        wallMap,
-        floorMap,
-        ceilingMap,
-        wallTextures,
-        floorAndCeilingTextures,
+        *wallMap_,
+        *floorMap_,
+        *ceilingMap_,
+        wallTextures_,
+        floorAndCeilingTextures_,
         entities_);
 }
 
@@ -124,7 +121,7 @@ void Engine::fireHitscan() const {
         rayX += player_->dirX * STEP;
         rayY += player_->dirY * STEP;
 
-        if (wallMap.at(static_cast<int>(rayX), static_cast<int>(rayY)) != 0) {
+        if (wallMap_->at(static_cast<int>(rayX), static_cast<int>(rayY)) != 0) {
             return;
         }
 
@@ -143,10 +140,6 @@ void Engine::fireHitscan() const {
     }
 }
 
-void Engine::setState(std::unique_ptr<GameState> gameState) {
-    currentState = std::move(gameState);
-}
-
 std::shared_ptr<SpriteModel> Engine::loadSpriteModel(const std::string& id, const std::string& texturePath) {
     auto texture = std::make_shared<Texture>(texturePath);
     auto model = std::make_shared<SpriteModel>(texture);
@@ -155,26 +148,30 @@ std::shared_ptr<SpriteModel> Engine::loadSpriteModel(const std::string& id, cons
 }
 
 void Engine::loadWallTexture(const std::string& path) {
-    wallTextures.emplace_back(std::make_unique<Texture>(path));
+    wallTextures_.emplace_back(std::make_unique<Texture>(path));
 }
 
 void Engine::loadFloorCeilingTexture(const std::string& path) {
-    floorAndCeilingTextures.emplace_back(std::make_unique<Texture>(path));
+    floorAndCeilingTextures_.emplace_back(std::make_unique<Texture>(path));
 }
 
-void Engine::loadWallMap(const std::string& path) {
-    wallMap.load(path);
-    player_->wallMap = &wallMap;
+void Engine::loadWallMap(const std::string& path) const {
+    wallMap_->load(path);
+    player_->wallMap = wallMap_.get();
 }
 
-void Engine::loadFloorMap(const std::string& path) {
-    floorMap.load(path);
+void Engine::loadFloorMap(const std::string& path) const {
+    floorMap_->load(path);
 }
 
-void Engine::loadCeilingMap(const std::string& path) {
-    ceilingMap.load(path);
+void Engine::loadCeilingMap(const std::string& path) const {
+    ceilingMap_->load(path);
 }
 
 void Engine::loadHud(std::unique_ptr<HUD> hud) {
     hud_ = std::move(hud);
+}
+
+void Engine::loadEntity(std::unique_ptr<Entity> entity) {
+    entities_.emplace_back(std::move(entity));
 }

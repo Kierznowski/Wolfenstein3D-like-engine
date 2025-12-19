@@ -1,11 +1,11 @@
 #pragma once
-#include <memory>
-#include <string>
-#include <unordered_map>
 
 #include "Engine/Texture.h"
 #include "../renderer/Renderer.h"
 
+#include <memory>
+#include <string>
+#include <unordered_map>
 
 class BitmapFont {
 public:
@@ -14,12 +14,11 @@ public:
         int charH,
         const std::string& charset);
 
-    void drawText(Renderer& renderer,
-        int x, int y, const std::string& text) const;
+    void drawText(Renderer& renderer, int x, int y, const std::string& text) const;
 
 private:
     std::unique_ptr<Texture> texture_;
-    int charWidth;
-    int charHeight;
+    int charWidth_;
+    int charHeight_;
     std::unordered_map<char, SDL_Rect> glyphs_;
 };

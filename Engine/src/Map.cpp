@@ -4,36 +4,42 @@
 Map::Map() {
 }
 
-int Map::at(int x, int y) const {
-    return tiles.at(y * width + x);
+int Map::at(const int x, const int y) const {
+    return tiles_.at(y * width_ + x);
 }
 
 void Map::load(const std::string& filename) {
-    clear();
-
-    std::fstream file(filename);
+    std::ifstream file(filename);
     if (!file.is_open()) {
-        throw std::runtime_error("Could not open file " + filename);
+        throw std::runtime_error("Could not open file with map: " + filename);
     }
+
+    std::vector<std::vector<int>> rows;
     std::string line;
 
-    bool getWidth = true;
     while (std::getline(file, line)) {
-        height++;
-
         std::stringstream row(line);
         std::string tile;
+        std::vector<int> values;
 
         while (std::getline(row, tile, ',')) {
-            tiles.push_back(std::stoi(tile));
-            if (getWidth) width++;
+            values.emplace_back(std::stoi(tile));
         }
-        getWidth = false;
+
+        if (width_ == 0) {
+            width_ = static_cast<int>(values.size());
+        }
+
+        rows.emplace_back(std::move(values));
+    }
+
+    height_ = static_cast<int>(rows.size());
+    tiles_.reserve(width_ * height_);
+
+    for (int y = height_ - 1; y >= 0; --y) {
+        for (int x = 0; x < width_; ++x) {
+            tiles_.push_back(rows[y][x]);
+        }
     }
 }
 
-void Map::clear() {
-    width = 0;
-    height = 0;
-    tiles.clear();
-}

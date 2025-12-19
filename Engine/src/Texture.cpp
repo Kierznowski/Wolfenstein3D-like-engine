@@ -19,22 +19,20 @@ Texture::Texture(const std::string &path) {
     }
 
     // copy pixels to pure c++ vector
-    width = formatted->w;
-    height = formatted->h;
-    pixels.resize(width * height * sizeof(uint32_t));
-    std::memcpy(pixels.data(), formatted->pixels, width * height * sizeof(uint32_t));
-    std::cout << pixels[0] << std::endl;
+    width_ = formatted->w;
+    height_ = formatted->h;
+    pixels_.resize(width_ * height_ * sizeof(uint32_t));
+    std::memcpy(pixels_.data(), formatted->pixels, width_ * height_ * sizeof(uint32_t));
+    std::cout << pixels_[0] << std::endl;
     SDL_FreeSurface(formatted);
 
     std::cout << "Loaded texture: " << path << std::endl;
 }
 
-Texture::~Texture() = default;
-
-uint32_t Texture::getPixel(int x, int y) const noexcept {
-    if (x < 0 || y < 0 || x >= width || y >= height) {
+uint32_t Texture::getPixel(const int x, const int y) const {
+    if (x < 0 || y < 0 || x >= width_ || y >= height_) {
         return 0xFFFF00FF;
     }
-    return pixels[y * width + x];
+    return pixels_[y * width_ + x];
 }
 

@@ -1,7 +1,7 @@
-#include "../include/Engine/renderer/Raycaster.h"
-#include <vector>
+#include "../../include/Engine/renderer/Raycaster.h"
+#include "../../../Game/include/Game/Game.h"
 
-#include "../../Game/include/Game/Game.h"
+#include <vector>
 
 Raycaster::Raycaster(
     std::vector<uint32_t>& framebuffer,
@@ -12,22 +12,22 @@ Raycaster::Raycaster(
     const std::vector<std::unique_ptr<Texture>>& walls,
     const std::vector<std::unique_ptr<Texture>>& floorAndCeilingTex,
     const std::vector<std::unique_ptr<Entity>>& entities)
-        : framebuffer{framebuffer},
-        viewport(viewport),
-        windowWidth{viewport.width},
-        windowHeight{viewport.height},
-        offsetX{viewport.x},
-        offsetY{viewport.y},
-        wallMap{wallMap},
-        floorMap{floorMap},
-        ceilingMap{ceilingMap},
-        wallTextures{walls},
-        floorAndCeilingTextures{floorAndCeilingTex},
+        : framebuffer_{framebuffer},
+        viewport_(viewport),
+        windowWidth_{viewport.width},
+        windowHeight_{viewport.height},
+        offsetX_{viewport.x},
+        offsetY_{viewport.y},
+        wallMap_{wallMap},
+        floorMap_{floorMap},
+        ceilingMap_{ceilingMap},
+        wallTextures_{walls},
+        floorAndCeilingTextures_{floorAndCeilingTex},
         entities_{entities} {
 }
 
 void Raycaster::render(const Player& player) const {
-    std::vector<double> zBuffer(windowWidth);
+    std::vector<double> zBuffer(windowWidth_);
     renderFloorAndCeiling(player);
     renderWalls(player, zBuffer);
     renderSprites(player, zBuffer);
@@ -41,48 +41,48 @@ void Raycaster::renderFloorAndCeiling(const Player& player) const {
     const double planeX = player.planeX;
     const double planeY = player.planeY;
 
-    for (int y = windowHeight / 2; y < windowHeight; y++) {
+    for (int y = windowHeight_ / 2; y < windowHeight_; y++) {
         const double rayDirX0 = dirX - planeX;
         const double rayDirY0 = dirY - planeY;
         const double rayDirX1 = dirX + planeX;
         const double rayDirY1 = dirY + planeY;
 
-        const int p = y - windowHeight / 2;
-        const double posZ = windowHeight / 2.0; // middle of the screen
+        const int p = y - windowHeight_ / 2;
+        const double posZ = windowHeight_ / 2.0; // middle of the screen
         const double rowDistance = posZ / p;
 
-        const double floorStepX = rowDistance * (rayDirX1 - rayDirX0) / windowWidth;
-        const double floorStepY = rowDistance * (rayDirY1 - rayDirY0) / windowWidth;
+        const double floorStepX = rowDistance * (rayDirX1 - rayDirX0) / windowWidth_;
+        const double floorStepY = rowDistance * (rayDirY1 - rayDirY0) / windowWidth_;
 
         double floorX = posX + rowDistance * rayDirX0;
         double floorY = posY + rowDistance * rayDirY0;
 
-        for (int x = 0; x < windowWidth; x++) {
+        for (int x = 0; x < windowWidth_; x++) {
             const int cellX = static_cast<int>(floorX);
             const int cellY = static_cast<int>(floorY);
 
-            const int tx = static_cast<int>(floorAndCeilingTextures[0]->getWidth() * (floorX - cellX)) & (floorAndCeilingTextures[0]->getWidth() - 1);
-            const int ty = static_cast<int>(floorAndCeilingTextures[0]->getHeight() * (floorY - cellY)) & (floorAndCeilingTextures[0]->getHeight() - 1);
+            const int tx = static_cast<int>(floorAndCeilingTextures_[0]->getWidth() * (floorX - cellX)) & (floorAndCeilingTextures_[0]->getWidth() - 1);
+            const int ty = static_cast<int>(floorAndCeilingTextures_[0]->getHeight() * (floorY - cellY)) & (floorAndCeilingTextures_[0]->getHeight() - 1);
 
             //const int floorTex = floorMap.at(tx, ty);
 
             floorX += floorStepX;
             floorY += floorStepY;
 
-            const uint32_t floorColor = floorAndCeilingTextures[0]->getPixel(tx, ty);
-            framebuffer[(offsetY + y) * windowWidth + (offsetX + x)] = floorColor;
+            const uint32_t floorColor = floorAndCeilingTextures_[0]->getPixel(tx, ty);
+            framebuffer_[(offsetY_ + y) * windowWidth_ + (offsetX_ + x)] = floorColor;
 
-            const int ceilingY = windowHeight - y - 1;
-            const uint32_t ceilColor = floorAndCeilingTextures[1]->getPixel(tx, ty);
-            framebuffer[(offsetY + ceilingY) * windowWidth + (offsetX + x)] = ceilColor;
+            const int ceilingY = windowHeight_ - y - 1;
+            const uint32_t ceilColor = floorAndCeilingTextures_[1]->getPixel(tx, ty);
+            framebuffer_[(offsetY_ + ceilingY) * windowWidth_ + (offsetX_ + x)] = ceilColor;
         }
     }
 }
 
 void Raycaster::renderWalls(const Player& player, std::vector<double>& zBuffer) const {
-    for (int x = 0; x < windowWidth; x++) {
+    for (int x = 0; x < windowWidth_; x++) {
         // calculate ray position
-        const double cameraX = 2 * x / static_cast<double>(windowWidth) - 1;
+        const double cameraX = 2 * x / static_cast<double>(windowWidth_) - 1;
         const double rayDirX = player.dirX + player.planeX * cameraX;
         const double rayDirY = player.dirY + player.planeY * cameraX;
 
@@ -132,11 +132,11 @@ void Raycaster::renderWalls(const Player& player, std::vector<double>& zBuffer) 
                 side = 1;
             }
 
-            if (mapX < 0 || mapX >= wallMap.getWidth() || mapY < 0 || mapY >= wallMap.getHeight()) {
+            if (mapX < 0 || mapX >= wallMap_.getWidth() || mapY < 0 || mapY >= wallMap_.getHeight()) {
                 break;
             }
 
-            if (wallMap.at(mapX, mapY) > 0) {
+            if (wallMap_.at(mapX, mapY) > 0) {
                 break;
             }
         }
@@ -153,14 +153,14 @@ void Raycaster::renderWalls(const Player& player, std::vector<double>& zBuffer) 
         zBuffer[x] = perpWallDist;
 
         // to get perspective we calculate height of the wall from proportions
-        const int lineHeight = static_cast<int>(windowHeight / perpWallDist);
-        int drawStart = -lineHeight / 2 + windowHeight / 2;
+        const int lineHeight = static_cast<int>(windowHeight_ / perpWallDist);
+        int drawStart = -lineHeight / 2 + windowHeight_ / 2;
         if (drawStart < 0) drawStart = 0;
-        int drawEnd = lineHeight / 2 + windowHeight / 2;
-        if (drawEnd >= windowHeight) drawEnd = windowHeight - 1;
+        int drawEnd = lineHeight / 2 + windowHeight_ / 2;
+        if (drawEnd >= windowHeight_) drawEnd = windowHeight_ - 1;
 
-        int texIndex = wallMap.at(mapX, mapY) - 1;
-        const Texture* tex = wallTextures[std::clamp(texIndex, 0, static_cast<int>(wallTextures.size()-1))].get();
+        int texIndex = wallMap_.at(mapX, mapY) - 1;
+        const Texture* tex = wallTextures_[std::clamp(texIndex, 0, static_cast<int>(wallTextures_.size()-1))].get();
 
         // calculating where the wall is hit. wallX is x coordinate of texture!
         // If side == 0 it's also x coordinate of wall on mapp, if side == 1 it's y coordinate of wall on map
@@ -180,7 +180,7 @@ void Raycaster::renderWalls(const Player& player, std::vector<double>& zBuffer) 
         if (side == 1 && rayDirY < 0) texX = tex->getWidth() - texX - 1;
 
         const double step = 1.0 * tex->getHeight() / lineHeight;
-        double texPos = (drawStart - windowHeight / 2.0 + lineHeight / 2.0) * step;
+        double texPos = (drawStart - windowHeight_ / 2.0 + lineHeight / 2.0) * step;
 
         for (int y = drawStart; y < drawEnd; y++) {
             const int texY = static_cast<int>(texPos) & (tex->getHeight() - 1);
@@ -188,7 +188,7 @@ void Raycaster::renderWalls(const Player& player, std::vector<double>& zBuffer) 
             uint32_t color = tex->getPixel(texX, texY);
             // making 1-side darker. Shifting by 1 bit divides color by 2. Then we set first bit of each byte to 0
             if (side == 1) color = (color >> 1) & 0x7F7F7F7F;
-            framebuffer[(offsetY + y) * windowWidth + (offsetX + x)] = color;
+            framebuffer_[(offsetY_ + y) * windowWidth_ + (offsetX_ + x)] = color;
         }
     }
 }
@@ -226,22 +226,22 @@ void Raycaster::renderSprites(const Player& player, const std::vector<double>& z
         const double transformX = invDet * (player.dirY * objectX - player.dirX * objectY);
         const double transformY = invDet * (-player.planeY * objectX + player.planeX * objectY);
 
-        const int spriteScreenX = static_cast<int>(static_cast<int>(windowWidth / 2) * (1 + transformX / transformY));
+        const int spriteScreenX = static_cast<int>(static_cast<int>(windowWidth_ / 2) * (1 + transformX / transformY));
 
         // Calculating sprite Height
-        const int spriteHeight = std::abs(static_cast<int>(windowHeight / transformY)) / entity->sprite_->scale;
+        const int spriteHeight = std::abs(static_cast<int>(windowHeight_ / transformY)) / entity->sprite_->scale;
 
         // Calculating start and end of vertical stripe (from the middle of the screen)
         // vMoveScreen is shifting by Sprites shift parameter
         const int vMoveScreen = static_cast<int>(entity->sprite_->shift / transformY);
-        int drawStartY = windowHeight / 2 - spriteHeight / 2 + vMoveScreen;
-        int drawEndY = windowHeight / 2 + spriteHeight / 2 + vMoveScreen;
+        int drawStartY = windowHeight_ / 2 - spriteHeight / 2 + vMoveScreen;
+        int drawEndY = windowHeight_ / 2 + spriteHeight / 2 + vMoveScreen;
 
         const int clippedStartY = std::max(drawStartY, 0);
-        const int clippedEndY = std::min(drawEndY, windowHeight);
+        const int clippedEndY = std::min(drawEndY, windowHeight_);
 
         // Calculating sprite width
-        const int spriteWidth = std::abs(static_cast<int>(windowHeight / transformY)) / entity->sprite_->scale;
+        const int spriteWidth = std::abs(static_cast<int>(windowHeight_ / transformY)) / entity->sprite_->scale;
         const int drawStartX = spriteScreenX - spriteWidth / 2;
         const int drawEndX = spriteScreenX + spriteWidth / 2;
 
@@ -255,7 +255,7 @@ void Raycaster::renderSprites(const Player& player, const std::vector<double>& z
             const double texXf = (static_cast<double>(localX) / static_cast<double>(spriteWidth)) * texWidth;
             const int texX = std::clamp(static_cast<int>(texXf), 0, texWidth - 1);
 
-            if (transformY > 0 && stripe > 0 && stripe < windowWidth && transformY < zBuffer[stripe]) {
+            if (transformY > 0 && stripe > 0 && stripe < windowWidth_ && transformY < zBuffer[stripe]) {
                 for (int y = clippedStartY; y < clippedEndY; ++y) {
                     const int localY = y - drawStartY;
                     const double texYf = (static_cast<double>(localY) / static_cast<double>(spriteHeight)) * texHeight;
@@ -263,7 +263,7 @@ void Raycaster::renderSprites(const Player& player, const std::vector<double>& z
 
                     uint32_t color = tex->getPixel(texX, texY);
                     if ((color & 0x00FFFFFF) != 0) { // black = transparent
-                        framebuffer[(offsetY + y) * windowWidth + stripe] = color;
+                        framebuffer_[(offsetY_ + y) * windowWidth_ + stripe] = color;
                     }
                 }
             }

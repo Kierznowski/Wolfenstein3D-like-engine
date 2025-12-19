@@ -5,9 +5,8 @@ project(Game)
 add_executable(Game
         src/main.cpp
         src/Game.cpp
-        src/MainMenuState.cpp
-        src/GameplayState.cpp
-        include/Game/commands/MouseTurnCommand.h
+        src/states/MainMenuState.cpp
+        src/states/GameplayState.cpp
 )
 
 target_include_directories(Game

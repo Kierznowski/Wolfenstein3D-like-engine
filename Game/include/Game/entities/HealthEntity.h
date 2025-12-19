@@ -4,10 +4,10 @@
 class HealthEntity : public PickupEntity {
 public:
     explicit HealthEntity(
-        int healthBoost=10.0,
-        double posX=1.0,
-        double posY=1.0,
-        double radius=0.3,
+        const int healthBoost=10.0,
+        const double posX=1.0,
+        const double posY=1.0,
+        const double radius=0.3,
         std::unique_ptr<Sprite> sprite=nullptr)
         : PickupEntity(posX, posY, radius, std::move(sprite)), healthBoost_(healthBoost) {
     }

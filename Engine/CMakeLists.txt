@@ -3,9 +3,9 @@
 project(Engine)
 
 add_library(Engine STATIC
-        src/Raycaster.cpp
+        src/renderer/Raycaster.cpp
         src/Engine.cpp
-        src/Renderer.cpp
+        src/renderer/Renderer.cpp
         src/Texture.cpp
         src/Map.cpp
         src/utils/Assets.cpp

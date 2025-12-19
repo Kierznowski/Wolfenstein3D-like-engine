@@ -1,42 +1,41 @@
-#include "../include/Engine/renderer/Renderer.h"
-#include "../include/Engine/utils/Assets.h"
+#include "../../include/Engine/renderer/Renderer.h"
+#include "../../include/Engine/utils/Assets.h"
 #include "Engine/utils/Viewport.h"
 
 #include <cstring>
 #include <stdexcept>
 #include <SDL2/SDL_ttf.h>
 
-
 Renderer::Renderer(const int width, const int height, const std::string &title)
-    : windowWidth(width), windowHeight(height), framebuffer(width * height) {
+    : windowWidth_(width), windowHeight_(height), framebuffer_(width * height) {
     if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_EVENTS) != 0) {
         throw std::runtime_error(SDL_GetError());
     }
 
-    window = SDL_CreateWindow(title.c_str(),
+    window_ = SDL_CreateWindow(title.c_str(),
         SDL_WINDOWPOS_CENTERED,
         SDL_WINDOWPOS_CENTERED,
-        windowWidth,
-        windowHeight,
+        windowWidth_,
+        windowHeight_,
         0);
 
-    if (!window) {
+    if (!window_) {
         throw std::runtime_error(SDL_GetError());
     }
 
     constexpr bool enableVSync = false;
 
-    renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED | (enableVSync ? SDL_RENDERER_PRESENTVSYNC : 0));
-    if (!renderer) {
+    renderer_ = SDL_CreateRenderer(window_, -1, SDL_RENDERER_ACCELERATED | (enableVSync ? SDL_RENDERER_PRESENTVSYNC : 0));
+    if (!renderer_) {
         throw std::runtime_error(SDL_GetError());
     }
 
-    texture = SDL_CreateTexture(renderer,
+    texture_ = SDL_CreateTexture(renderer_,
         SDL_PIXELFORMAT_ARGB8888,
         SDL_TEXTUREACCESS_STREAMING,
-        windowWidth, windowHeight);
+        windowWidth_, windowHeight_);
 
-    if (!texture) {
+    if (!texture_) {
         throw std::runtime_error(SDL_GetError());
     }
 
@@ -44,27 +43,27 @@ Renderer::Renderer(const int width, const int height, const std::string &title)
         throw std::runtime_error(SDL_GetError());
     }
 
-    font = TTF_OpenFont(Assets::path("/fonts/BrunoAceSC-Regular.ttf").c_str(), 20);
-    if (!font) {
+    font_ = TTF_OpenFont(Assets::path("/fonts/BrunoAceSC-Regular.ttf").c_str(), 20);
+    if (!font_) {
         throw std::runtime_error(SDL_GetError());
     }
 }
 
 Renderer::~Renderer() {
-    SDL_DestroyTexture(texture);
-    SDL_DestroyRenderer(renderer);
-    SDL_DestroyWindow(window);
+    SDL_DestroyTexture(texture_);
+    SDL_DestroyRenderer(renderer_);
+    SDL_DestroyWindow(window_);
     SDL_Quit();
 }
 
 void Renderer::clear() {
-    std::fill(framebuffer.begin(), framebuffer.end(), 0xFF000000);
+    std::fill(framebuffer_.begin(), framebuffer_.end(), 0xFF000000);
 }
 
 void Renderer::clearViewport(const Viewport &viewport, const uint32_t color) {
     for (int y = viewport.y; y < viewport.y + viewport.height; y++) {
         for (int x = viewport.x; x < viewport.x + viewport.width; x++) {
-            framebuffer[y * windowWidth + x] = color;
+            framebuffer_[y * windowWidth_ + x] = color;
         }
     }
 }
@@ -72,18 +71,18 @@ void Renderer::clearViewport(const Viewport &viewport, const uint32_t color) {
 void Renderer::presentFrame() const {
     void* pixels {nullptr};
     int pitch;
-    if (SDL_LockTexture(texture, nullptr, &pixels, &pitch) == 0) {
-        std::memcpy(pixels, framebuffer.data(), framebuffer.size() * sizeof(uint32_t));
-        SDL_UnlockTexture(texture);
+    if (SDL_LockTexture(texture_, nullptr, &pixels, &pitch) == 0) {
+        std::memcpy(pixels, framebuffer_.data(), framebuffer_.size() * sizeof(uint32_t));
+        SDL_UnlockTexture(texture_);
     }
-    SDL_RenderClear(renderer);
-    SDL_RenderCopy(renderer, texture, nullptr, nullptr);
-    SDL_RenderPresent(renderer);
+    SDL_RenderClear(renderer_);
+    SDL_RenderCopy(renderer_, texture_, nullptr, nullptr);
+    SDL_RenderPresent(renderer_);
 }
 
 void Renderer::drawText(const int posX, const int posY, const std::string& text) {
     constexpr SDL_Color textColor = {255, 255, 255, 255};
-    SDL_Surface *textSurface = TTF_RenderText_Solid(font, text.c_str(), textColor);
+    SDL_Surface *textSurface = TTF_RenderText_Solid(font_, text.c_str(), textColor);
     if (!textSurface) {
         throw std::runtime_error(SDL_GetError());
     }
@@ -101,14 +100,14 @@ void Renderer::drawText(const int posX, const int posY, const std::string& text)
 
     for (int y = 0; y < textSurface->h; y++) {
         const int fbY = posY + y;
-        if (fbY < 0 || fbY >= windowHeight) continue;
+        if (fbY < 0 || fbY >= windowHeight_) continue;
 
         for (int x = 0; x < textSurface->w; x++) {
             const int fbX = posX + x;
-            if (fbX < 0 || fbX >= windowWidth) continue;
+            if (fbX < 0 || fbX >= windowWidth_) continue;
 
             const uint32_t color = pixels[y * textSurface->w + x];
-            framebuffer[fbY * windowWidth + fbX] = color;
+            framebuffer_[fbY * windowWidth_ + fbX] = color;
         }
     }
     SDL_FreeSurface(textSurface);
@@ -120,23 +119,25 @@ void Renderer::drawTexturedRect(const int dstX, const int dstY, const int w, con
 
     for (int y = 0; y < h; y++) {
         const int fbY = dstY + y;
-        if (fbY < 0 || fbY >= windowHeight) continue;
+        if (fbY < 0 || fbY >= windowHeight_) continue;
 
         const int srcY = src.y + (y * src.h) / h;
 
         for (int x = 0; x < w; x++) {
             const int fbX = dstX + x;
-            if (fbX < 0 || fbX >= windowWidth) continue;
+            if (fbX < 0 || fbX >= windowWidth_) continue;
 
             const int srcX = src.x + (x * src.w) / w;
             const uint32_t color = srcPixels[srcY * texW + srcX];
 
             if ((color & 0x00FFFFFF) == 0) continue;
-            framebuffer[fbY * windowWidth + fbX] = color;
+            framebuffer_[fbY * windowWidth_ + fbX] = color;
         }
     }
 }
 
-void Renderer::drawPixel(int x, int y, uint32_t color) {
-    framebuffer[y * windowWidth + x] = color;
+void Renderer::drawPixel(const int x, const int y, const uint32_t color) {
+    if (x < 0 || x >= windowWidth_) return;
+    if (y < 0 || y >= windowHeight_) return;
+    framebuffer_[y * windowWidth_ + x] = color;
 }

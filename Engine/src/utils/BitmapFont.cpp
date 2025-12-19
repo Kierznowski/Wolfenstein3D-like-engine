@@ -5,15 +5,15 @@ BitmapFont::BitmapFont(
     const int charW,
     const int charH,
     const std::string &charset)
-        : texture_(std::make_unique<Texture>(path)), charWidth(charW), charHeight(charH)
+        : texture_(std::make_unique<Texture>(path)), charWidth_(charW), charHeight_(charH)
 {
-    const int cols = texture_->getWidth() / charWidth;
+    const int cols = texture_->getWidth() / charWidth_;
 
     for (int i = 0; i < charset.size(); i++) {
-        const int x = (i % cols) * charWidth;
-        const int y = (i / cols) * charHeight;
+        const int x = (i % cols) * charWidth_;
+        const int y = (i / cols) * charHeight_;
 
-        glyphs_[charset[i]] = {x, y, charWidth, charHeight};
+        glyphs_[charset[i]] = {x, y, charWidth_, charHeight_};
     }
 }
 
@@ -23,13 +23,13 @@ void BitmapFont::drawText(Renderer& renderer, const int x, const int y, const st
     for (char c : text) {
         auto it = glyphs_.find(c);
         if (it == glyphs_.end()) {
-            cursorX += charWidth;
+            cursorX += charWidth_;
             continue;
         }
 
         renderer.drawTexturedRect(
-            cursorX, y, charWidth, charHeight, texture_.get(), it->second);
+            cursorX, y, charWidth_, charHeight_, texture_.get(), it->second);
 
-        cursorX += charWidth;
+        cursorX += charWidth_;
     }
 }

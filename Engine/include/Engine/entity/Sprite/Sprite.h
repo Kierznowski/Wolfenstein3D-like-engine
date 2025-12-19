@@ -8,7 +8,7 @@ struct Sprite {
             : scale(scale), shift(shift), model(spriteModel)
     {}
 
-    Sprite(const std::shared_ptr<SpriteModel>& spriteModel)
+    explicit Sprite(const std::shared_ptr<SpriteModel>& spriteModel)
         : model(spriteModel)
     {}
 

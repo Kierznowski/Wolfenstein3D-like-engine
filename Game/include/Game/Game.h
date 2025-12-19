@@ -7,8 +7,8 @@ public:
     void run();
 
 private:
-    std::unique_ptr<Player> player;
+    std::unique_ptr<Player> player_;
 
     void loadAssets(Engine& engine) const;
-    void createHud(Engine& engine) const;
+    void createHud(Engine& engine);
 };

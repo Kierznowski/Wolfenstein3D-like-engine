@@ -3,10 +3,6 @@
 #include <algorithm>
 #include <cmath>
 
-void Player::update(const double dt) {
-
-}
-
 void Player::moveForward(const double dt) {
     const double moveStep = moveSpeed_ * dt;
     const double nextX = x + dirX * moveStep;

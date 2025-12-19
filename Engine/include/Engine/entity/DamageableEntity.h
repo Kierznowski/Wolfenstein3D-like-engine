@@ -15,7 +15,7 @@ struct DamageableEntity : Entity {
         interactive_ = false;
         visible_ = true;
     }
-    void onHit(Player& player, int damage) {
+    void onHit(Player& player, const int damage) {
         hp -= damage;
         if (hp <= 0) {
             alive = false;

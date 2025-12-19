@@ -1,7 +1,7 @@
-#include "Game/MainMenuState.h"
+#include "../../include/Game/states/MainMenuState.h"
 
-#include "../../Engine/include/Engine/renderer/Renderer.h"
-#include "Game/GameplayState.h"
+#include "../../../Engine/include/Engine/renderer/Renderer.h"
+#include "../../include/Game/states/GameplayState.h"
 
 
 void MainMenuState::handleInput(const SDL_Event& event, CommandQueue& commandQueue) {

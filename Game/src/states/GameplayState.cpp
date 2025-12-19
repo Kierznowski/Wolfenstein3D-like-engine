@@ -1,4 +1,4 @@
-#include "Game/GameplayState.h"
+#include "../../include/Game/states/GameplayState.h"
 
 #include "Game/commands/MouseTurnCommand.h"
 
